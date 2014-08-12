@@ -92,7 +92,6 @@ public class ModelUpdateListener implements ServletContextListener {
 
 				AMQPClient.receiveMessage(AMQP_HOST, AMQP_QUEUE,
 						modelUpdater);
-
 			}
 		});
 		instance = this;
