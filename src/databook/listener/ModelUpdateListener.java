@@ -20,9 +20,6 @@ import org.irods.jargon.core.connection.IRODSAccount;
 import org.irods.jargon.core.pub.io.IRODSFileFactory;
 import org.irods.jargon.core.pub.io.IRODSFileInputStream;
 
-import com.rabbitmq.client.ConsumerCancelledException;
-import com.rabbitmq.client.ShutdownSignalException;
-
 import databook.listener.vivo.VIVOIndexer;
 import databook.listener.vivo.VIVORDFDatabase;
 import databook.local.model.RDFDatabase;
@@ -72,40 +69,30 @@ public class ModelUpdateListener implements ServletContextListener {
 		execService.submit(new Runnable() {
 			@Override
 			public void run() {
-				try {
-					log.info("Databook plugin started");
-					rdfServiceFactory = RDFServiceUtils
-							.getRDFServiceFactory(sce.getServletContext());
-					rdfService = rdfServiceFactory.getRDFService();
-					database = new VIVORDFDatabase(new RDFServiceWrapper(){
+				log.info("Databook plugin started");
+				rdfServiceFactory = RDFServiceUtils
+						.getRDFServiceFactory(sce.getServletContext());
+				rdfService = rdfServiceFactory.getRDFService();
+				database = new VIVORDFDatabase(new RDFServiceWrapper(){
 
-						@Override
-						public InputStream sparqlSelectQuery(String query) throws Exception {
-							// currently only support CSV from this method
-							// use getRdfServiceImpl to get other formats
-							return rdfService.sparqlSelectQuery(query, edu.cornell.mannlib.vitro.webapp.rdfservice.RDFService.ResultFormat.CSV);
-						}
+					@Override
+					public InputStream sparqlSelectQuery(String query) throws Exception {
+						// currently only support CSV from this method
+						// use getRdfServiceImpl to get other formats
+						return rdfService.sparqlSelectQuery(query, edu.cornell.mannlib.vitro.webapp.rdfservice.RDFService.ResultFormat.CSV);
+					}
 
-						@Override
-						public Object getRdfServiceImpl() {
-							return rdfService;
-						}});
-					vivoIndex = new VIVOIndexer(database);
-					modelUpdater = new ModelUpdater();
-					modelUpdater.regIndexer(vivoIndex);
+					@Override
+					public Object getRdfServiceImpl() {
+						return rdfService;
+					}});
+				vivoIndex = new VIVOIndexer(database);
+				modelUpdater = new ModelUpdater();
+				modelUpdater.regIndexer(vivoIndex);
 
-					AMQPClient.receiveMessage(AMQP_HOST, AMQP_QUEUE,
-							modelUpdater);
+				AMQPClient.receiveMessage(AMQP_HOST, AMQP_QUEUE,
+						modelUpdater);
 
-				} catch (IOException e) {
-					log.error(e.getLocalizedMessage());
-				} catch (ShutdownSignalException e) {
-					log.error(e.getLocalizedMessage());
-				} catch (ConsumerCancelledException e) {
-					log.error(e.getLocalizedMessage());
-				} catch (InterruptedException e) {
-					log.error(e.getLocalizedMessage());
-				}
 
 			}
 		});

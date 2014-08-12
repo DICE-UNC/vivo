@@ -1,8 +1,10 @@
 pwd=`pwd`
 downloads_dir=$pwd/$1
 databook_dir=$pwd/$2
+indexing_jar_path=$3
 tomcat_dir=$databook_dir/apache-tomcat-7.0.55
 vivo_dir=$databook_dir/vivo-rel-1.5
+lib_dir=$vivo_dir/lib
 ant_dir=$databook_dir/apache-ant-1.8.4
 data_dir=$databook_dir/data
 ant_arc=apache-ant-1.8.4-bin.tar.gz
@@ -72,6 +74,9 @@ mysql -u root -p"$mysql_root_password" -e "DROP DATABASE $dbname;"
 mysql -u root -p"$mysql_root_password" -e "CREATE USER '$mysql_username'@'localhost' IDENTIFIED BY '$mysql_password';"
 mysql -u root -p"$mysql_root_password" -e "CREATE DATABASE $dbname CHARACTER SET utf8;"
 mysql -u root -p"$mysql_root_password" -e "GRANT ALL ON $dbname.* TO '$mysql_username'@'localhost' IDENTIFIED BY '$mysql_password';"
+
+# setup indexing
+cp $indexing_jar_path $lib_dir
 
 # setup vivo
 pushd $vivo_dir

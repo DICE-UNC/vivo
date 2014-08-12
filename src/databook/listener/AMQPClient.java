@@ -2,62 +2,84 @@ package databook.listener;
 
 import java.io.IOException;
 
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.Consumer;
-import com.rabbitmq.client.ConsumerCancelledException;
-import com.rabbitmq.client.DefaultConsumer;
-import com.rabbitmq.client.ShutdownSignalException;
-import com.rabbitmq.client.AMQP.BasicProperties;
-import com.rabbitmq.client.Envelope;;
+import org.apache.qpid.proton.message.Message;
+import org.apache.qpid.proton.message.impl.*;
+import org.apache.qpid.proton.messenger.Messenger;
+import org.apache.qpid.proton.messenger.impl.MessengerImpl;
+import org.apache.qpid.proton.amqp.messaging.AmqpValue;
 
-import databook.listener.service.MessageHandler;
+import databook.listener.service.MessagingService;
 
 public class AMQPClient {
 	
 	public static void sendMessage(String host, String queueName, String message) throws IOException {
-		ConnectionFactory factory = new ConnectionFactory();
-	    factory.setHost(host);
-	    com.rabbitmq.client.Connection connection = factory.newConnection();
-	    Channel channel = connection.createChannel();
-	    
-	    channel.queueDeclare(queueName, false, false, false, null);
-	    channel.basicPublish("", queueName, null, message.getBytes());
-	    System.out.println("Sent '" + message + "'");
-	    
-	    channel.close();
-	    connection.close();
+		try {
+			Messenger mng = new MessengerImpl();
+			String a = "amqp://" + host + "/" + queueName;
+			mng.start();
+			Message msg = new MessageImpl();
+			msg.setAddress(a);
+			msg.setBody(new AmqpValue(message));
+			mng.put(msg);
+			mng.send();
+            mng.stop();
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+
+//		ConnectionFactory factory = new ConnectionFactory();
+//	    factory.setHost(host);
+//	    com.rabbitmq.client.Connection connection = factory.newConnection();
+//	    Channel channel = connection.createChannel();
+//	    
+//	    channel.queueDeclare(queueName, false, false, false, null);
+//	    channel.basicPublish("", queueName, null, message.getBytes());
+//	    System.out.println("Sent '" + message + "'");
+//	    
+//	    channel.close();
+//	    connection.close();
 	}
 	
-	public static void receiveMessage(String host, String queueName, final MessageHandler handler) throws IOException, ShutdownSignalException, ConsumerCancelledException, InterruptedException {
-		ConnectionFactory factory = new ConnectionFactory();
-	    factory.setHost(host);
-	    Connection connection = factory.newConnection();
-	    Channel channel = connection.createChannel();
-	    
-	    channel.queueDeclare(queueName, false, false, false, null);
-	    System.out.println("Waiting for message");
-	    
-	    Consumer consumer = new DefaultConsumer(channel) {
-
-			@Override
-			public void handleDelivery(String consumerTag, Envelope envelope,
-					BasicProperties properties, byte[] body) throws IOException {
-			        String message = new String(body);
+	public static void receiveMessage(String host, String queueName, final MessagingService handler) {
+		try {
+			Messenger mng = new MessengerImpl();
+			String a = "amqp://" + host + "/" + queueName;
+			mng.start();
+            mng.subscribe(a);
+            int ct = 0;
+            boolean done = false;
+            while (!done) {
+        	    System.out.println("Waiting for message");
+                mng.recv();
+                while (mng.incoming() > 0) {
+                    Message message = mng.get();
 			        System.out.println("Received '" + message + "'");
-			        handler.handle(message);
-		    }
-	    	
-	    };
+                    ++ct;
+			        handler.handle(message.getBody().toString());
+                }
+            }
+            mng.stop();
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
 	    
-	    channel.basicConsume(queueName, true, consumer);
+//	    Consumer consumer = new DefaultConsumer(channel) {
+//
+//			@Override
+//			public void handleDelivery(String consumerTag, Envelope envelope,
+//					BasicProperties properties, byte[] body) throws IOException {
+//			        String message = new String(body);
+//		    }
+//	    	
+//	    };
+//	    
+//	    channel.basicConsume(queueName, true, consumer);
 	    		
 	}
 	
-	public static void main(String[] args) throws IOException, ShutdownSignalException, ConsumerCancelledException, InterruptedException {
+	public static void main(String[] args) throws IOException, InterruptedException {
 		sendMessage("localhost", "queue", "hello");
-		receiveMessage("localhost", "queue", new MessageHandler() {
+		receiveMessage("localhost", "queue", new MessagingService() {
 
 			@Override
 			public void handle(String message) {
