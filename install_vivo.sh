@@ -36,7 +36,7 @@ popd
 
 # install & setup mysql
 
-sudo apt-get install -y mysql-server mysql-client openjdk-7-jdk gnome-icon-theme-full ant tomcat7 gradle
+sudo apt-get install -y git mysql-server mysql-client openjdk-7-jdk gnome-icon-theme-full ant tomcat7 gradle
 
 mysql -u root -p"$mysql_root_password" -e "DROP USER '$mysql_username'@'localhost';"
 mysql -u root -p"$mysql_root_password" -e "DROP DATABASE $dbname;"
@@ -64,3 +64,9 @@ sed -i \
 ant all
 popd
 
+# setup databook
+pushd databook_dir
+git checkout https://github.com/DICE-UNC/vivo.git
+cd vivo
+gradle -q deploy
+popd
