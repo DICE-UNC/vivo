@@ -1,0 +1,384 @@
+package databook.listener;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import databook.listener.RDFDatabase.Format;
+import databook.listener.RDFDatabase.RDFDatabaseException;
+import databook.listener.RDFDatabase.RDFDatabaseTransaction;
+import edu.cornell.mannlib.vitro.webapp.rdfservice.RDFServiceException;
+
+public class ModelUpdater implements MessageHandler {
+	private final ModelUpdateListener modelUpdateListener;
+	public static final String ATTR_PREVIEW = "preview";
+	public static final String ATTR_THUMB_PREVIEW = "thumbPreview";
+	static final Log log = LogFactory.getLog(ModelUpdater.class);
+	private RDFDatabase database;
+	public static final String DATABOOK_MODEL_URI = "http://vitro.mannlib.cornell.edu/a/graph/databook-model";
+	public static final String LABEL_MODEL_URI = "http://vitro.mannlib.cornell.edu/default/vitro-kb-inf";
+
+
+	public ModelUpdater(RDFDatabase database) {
+		this.database = database;
+	}
+
+
+String databookResourceNoBracket(String name) {
+	return "http://localhost/vivo/ontology/databook#"+name;
+}
+
+String databookResource(String name) {
+	return "<"+databookResourceNoBracket(name)+">";
+}
+
+String rdfsResource(String name) {
+	return "<"+rdfsResourceNoBracket(name)+">";
+}
+
+String rdfsResourceNoBracket(String name) {
+	return "http://www.w3.org/2000/01/rdf-schema#"+name;
+}
+
+String databookInt(String name) {
+	return "\""+name+"\"^^<http://www.w3.org/2001/XMLSchema#integer>";
+}
+String databookString(String name) {
+	return "\""+name+"\"^^<http://www.w3.org/2001/XMLSchema#string>";
+}
+String databookString(String name, String locale) {
+	return "\""+name+"\"@"+locale;
+}
+    Date parseTimeStr(String timeStr) {
+	try {
+		return new SimpleDateFormat("yyyy MM dd HH:mm:ss").parse(timeStr);
+	} catch (java.text.ParseException e) {
+		log.error("wrong time format '"+timeStr+"'");
+	}
+	return null;
+    }
+String databookDatetime(Date date) {
+	SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss");  
+	StringBuffer sb = new StringBuffer(sdf.format(date));  
+	return "\""+sb+"\"^^<http://www.w3.org/2001/XMLSchema#dateTime>";
+}
+String databookAnonymousResource(String... po) {
+	StringBuilder sb = new StringBuilder("[ ");
+	sb.append(po[0]);
+	sb.append(" ");
+	sb.append(po[1]);
+	sb.append(" ");
+	for(int i=2;i<po.length;i+=2) {
+		sb.append("; ");
+		sb.append(po[i]);
+		sb.append(" ");
+		sb.append(po[i+1]);
+		sb.append(" ");			
+	}
+	sb.append("]");
+	return sb.toString();
+}
+String databookStatement(String s, String... po) {
+	StringBuilder sb = new StringBuilder(s);
+	sb.append(" ");
+	sb.append(po[0]);
+	sb.append(" ");
+	sb.append(po[1]);
+	sb.append(" ");
+	for(int i =2;i<po.length;i+=2) {
+		sb.append("; ");
+		sb.append(po[i]);
+		sb.append(" ");
+		sb.append(po[i+1]);
+		sb.append(" ");
+	}
+	sb.append(". ");
+	return sb.toString();
+}
+
+String databookData(String value, String type) {
+	if(type.equals("integer")) {
+		return databookInt(value);
+	} else {
+		return databookString(value);
+	}
+}
+String databookMetaObj(String value, String type) {
+	return type.equals("object")?databookResource(value)
+	      :type.equals("dateTime")?databookDatetime(parseTimeStr(value)):databookData(value, type);
+}
+private String genAVUId(String objId, String attribute, String value, String unit) {
+	return URLEncoder.encode(objId + "/" + attribute + "/" + value + "/" + unit);
+}
+/*
+ * message format: first line command:
+ * 
+ * add 
+ * del
+ * move
+ * addMeta 
+ * delMeta 
+ * modMeta 
+ */
+public void update(String message) throws UnsupportedEncodingException,
+		RDFServiceException, RDFDatabaseException {
+	log.info("Executing update '" + message + "'");
+	RDFDatabaseTransaction trans = database.newTransaction();
+	Runnable postProc = null;
+	String[] commands = message.split("\n");
+	if (commands[0].equals("add")) {
+		String dataEntityId = commands[1];
+		String dataEntityName = commands[2];
+		String dataEntityType = commands[3];
+		String collectionId = commands[4];
+		// here must specific "label" with a language tag, otherwise when updating label, IndividualDAOJena will create a duplicate stmt with a language tag
+		String n3StrAdd = 
+			databookStatement(databookResource(dataEntityId), 
+				"a", databookResource(dataEntityType)) +
+			databookStatement(databookResource(collectionId), 
+				databookResource("hasPart"), databookResource(dataEntityId));
+		
+		String n3StrAdd2 = databookStatement(databookResource(dataEntityId),
+				rdfsResource("label"), databookString(dataEntityName, "en-US"));
+
+		trans.add(n3StrAdd, Format.N3, DATABOOK_MODEL_URI);
+		trans.add(n3StrAdd2, Format.N3, LABEL_MODEL_URI);
+	} else if (commands[0].equals("del")) {
+		// TODO delete all statements about this individual
+		String dataEntityId = commands[1];
+		String collectionId = commands[2];
+		String n3StrRem =
+				databookStatement(databookResource(collectionId), databookResource("hasPart"), databookResource(dataEntityId));
+		trans.remove(n3StrRem, Format.N3, DATABOOK_MODEL_URI);
+
+	} else if (commands[0].equals("move")) {
+		String dataEntityId = commands[1];
+		String dataEntityPathOld = commands[2];
+		String dataEntityPathNew = commands[3];
+		String collectionIdOld = commands[4];
+		String collectionIdNew = commands[5];
+
+		String n3StrAdd = 
+			databookStatement(databookResource(collectionIdNew), databookResource("hasPart"), databookResource(dataEntityId));
+		String n3StrAdd2 =
+			databookStatement(databookResource(dataEntityId), rdfsResource("label"), databookString(dataEntityPathNew, "en-US"));
+		String n3StrRem = 
+			databookStatement(databookResource(collectionIdOld), databookResource("hasPart"), databookResource(dataEntityId));
+		String n3StrRem2 =
+			databookStatement(databookResource(dataEntityId), rdfsResource("label"), databookString(dataEntityPathOld, "en-US")); 
+		// vivo sometimes automatically create a new label with language tag attached, therefore try to apply language tag here to ensure it is deleted.
+		
+		trans.remove(n3StrRem, Format.N3, DATABOOK_MODEL_URI);
+		trans.remove(n3StrRem2, Format.N3, LABEL_MODEL_URI);
+		trans.add(n3StrAdd, Format.N3, DATABOOK_MODEL_URI);
+		trans.add(n3StrAdd2, Format.N3, LABEL_MODEL_URI);
+
+	} else if (commands[0].equals("addMeta")) {
+		final String dataEntityId = commands[1];
+		String propertyName = commands[2];
+		String value = commands[3];
+		String type = commands[4];
+		
+		String n3StrAdd = 
+				databookStatement(databookResource(dataEntityId), databookResource(propertyName), databookMetaObj(value, type));
+		trans.add(n3StrAdd, Format.N3,
+				DATABOOK_MODEL_URI);
+		
+		// handles metadata specific tasks
+		log.info("calling metadata specific handler for '"+propertyName+"'");
+		if(propertyName.equals(ATTR_PREVIEW) || propertyName.equals(ATTR_THUMB_PREVIEW)) {
+			final String previewPath;
+			final String previewThumbPath;
+			if(propertyName.equals(ATTR_PREVIEW)) {
+				previewPath = value;
+				// get the preview thumb path
+				previewThumbPath = database.getValue(databookResourceNoBracket(dataEntityId), databookResourceNoBracket(ATTR_THUMB_PREVIEW));
+			} else /* if (propertyName.equals(ATTR_THUMB_PREVIEW)) */ {
+				previewThumbPath = value;
+				// get the preview path
+				previewPath = database.getValue(databookResourceNoBracket(dataEntityId), databookResourceNoBracket(ATTR_PREVIEW));
+			}
+			if(previewPath != null && previewThumbPath != null) {
+				postProc = new Runnable() {
+					public void run() {
+						try {
+							ModelUpdateListener.instance.updateImage(databookResourceNoBracket(dataEntityId), previewThumbPath, previewPath);
+						} catch (IOException e) {
+							log.error("Error updating preview '" + e.getMessage() + "'");
+						}
+					}
+				};
+			}
+		}
+		
+	} else if (commands[0].equals("delMeta")) {
+		String dataEntityId = commands[1];
+		String propertyName = commands[2];
+		String value = commands[3];
+		String type = commands[4];
+		String n3StrRem =
+				databookStatement(databookResource(dataEntityId), databookResource(propertyName), databookMetaObj(value, type));
+		trans.remove(n3StrRem, Format.N3, DATABOOK_MODEL_URI);
+	} else if (commands[0].equals("modMeta")) {
+		String dataEntityId = commands[1];
+		String propertyName = commands[2];
+		String valueNew = commands[3];
+		String type = commands[4];
+		
+		// get old value
+		String valueOld = database.getValue(databookResourceNoBracket(dataEntityId), databookResourceNoBracket(propertyName));
+		
+		String n3StrAdd = databookStatement(databookResource(dataEntityId), databookResource(propertyName), databookData(valueNew, type));
+		String n3StrRem = databookStatement(databookResource(dataEntityId), databookResource(propertyName), databookData(valueOld, type));
+		trans.remove(n3StrRem, Format.N3,
+				DATABOOK_MODEL_URI);
+		trans.add(n3StrAdd, Format.N3,
+				DATABOOK_MODEL_URI);
+	} else if (commands[0].equals("addAVU")) {
+		String dataEntityId = commands[1];
+		String attribute = commands[2];
+		String value = commands[3];
+		String unit = commands[4];
+		String avuId = genAVUId(dataEntityId, attribute, value, unit);
+		String n3StrAdd = 
+				databookStatement(databookResource(dataEntityId), databookResource("avu"), databookResource(avuId)) +
+				databookStatement(databookResource(dataEntityId), databookResource("metaDataAttribute"), databookString(attribute)) +
+				databookStatement(databookResource(dataEntityId), databookResource("metaDataValue"), databookString(value)) +
+				databookStatement(databookResource(dataEntityId), databookResource("metaDataUnit"), databookString(unit));
+		trans.add(n3StrAdd, Format.N3,
+				DATABOOK_MODEL_URI);
+	} else if (commands[0].equals("delAVU")) {
+		String dataEntityId = commands[1];
+		String attribute = commands[2];
+		String value = commands[3];
+		String unit = commands[4];
+		String avuId = genAVUId(dataEntityId, attribute, value, unit);
+		String n3StrRem =
+				databookStatement(databookResource(dataEntityId), databookResource("avu"), databookResource(avuId)) +
+				databookStatement(databookResource(dataEntityId), databookResource("metaDataAttribute"), databookString(attribute)) +
+				databookStatement(databookResource(dataEntityId), databookResource("metaDataValue"), databookString(value)) +
+				databookStatement(databookResource(dataEntityId), databookResource("metaDataUnit"), databookString(unit));
+		trans.remove(n3StrRem, Format.N3,
+				DATABOOK_MODEL_URI);
+	} else if (commands[0].equals("modAVU")) {
+		String dataEntityId = commands[1];
+		String attribute = commands[2];
+		String value = commands[3];
+		String unit = commands[4];
+		String avuId = genAVUId(dataEntityId, attribute, value, unit);
+		String attributeNew = commands[5];
+		String valueNew = commands[6];
+		String unitNew = commands[7];
+		String avuIdNew = genAVUId(dataEntityId, attributeNew, valueNew, unitNew);
+		String n3StrAdd = 
+				databookStatement(databookResource(dataEntityId), databookResource("avu"), databookResource(avuId)) +
+				databookStatement(databookResource(dataEntityId), databookResource("metaDataAttribute"), databookString(attribute)) +
+				databookStatement(databookResource(dataEntityId), databookResource("metaDataValue"), databookString(value)) +
+				databookStatement(databookResource(dataEntityId), databookResource("metaDataUnit"), databookString(unit));
+
+		String n3StrRem = 
+				databookStatement(databookResource(dataEntityId), databookResource("avu"), databookResource(avuIdNew)) +
+				databookStatement(databookResource(dataEntityId), databookResource("metaDataAttribute"), databookString(attributeNew)) +
+				databookStatement(databookResource(dataEntityId), databookResource("metaDataValue"), databookString(valueNew)) +
+				databookStatement(databookResource(dataEntityId), databookResource("metaDataUnit"), databookString(unitNew));
+
+		trans.remove(n3StrRem, Format.N3,
+				DATABOOK_MODEL_URI);
+		trans.add(n3StrAdd, Format.N3,
+				DATABOOK_MODEL_URI);
+	} else if (commands[0].equals("access")) {
+		String accessId = commands[1];
+		String dataEntityId = commands[4];
+		String accessType = commands[2];
+		String userName = commands[3];
+		String timeStr = commands[5];
+		String description = commands[6];
+		String sessionId = commands[7];
+		// time format must agree with that used in the databook rules
+		Date time;
+			time = parseTimeStr(timeStr);
+			String n3StrAdd = 
+				databookStatement(databookResource(sessionId), 
+					"a", databookResource("Session")) +
+				databookStatement(databookResource(dataEntityId), 
+					databookResource("accessHistory"), databookResource(accessId)) +
+				databookStatement(databookResource(accessId),
+					"a", databookResource("Access"),
+					databookResource("title"), databookString(accessType),
+					databookResource("owner"), databookResource(userName),
+					databookResource("created"), databookDatetime(time),
+					databookResource("description"), databookString(description),
+					databookResource("session"), databookResource(sessionId),
+					rdfsResource("label"), databookString(accessType + " by " + userName + " on "+time.toString()));
+
+			trans.add(n3StrAdd, Format.N3,
+					DATABOOK_MODEL_URI);
+	} else if (commands[0].equals("action")) {
+		String accessId = commands[1];
+		String dataEntityId = commands[4];
+		String accessType = commands[2];
+		String userName = commands[3];
+		String startTimeStr = commands[5];
+		String endTimeStr = commands[6];
+		String description = commands[7];
+		String sessionId = commands[8];
+		// time format must agree with that used in the databook rules
+		Date startTime, endTime;
+			startTime = parseTimeStr(startTimeStr);
+			endTime = parseTimeStr(endTimeStr);
+			String n3StrAdd = 
+				databookStatement(databookResource(sessionId), 
+					"a", databookResource("Session")) +
+				databookStatement(databookResource(dataEntityId), 
+					databookResource("accessHistory"), databookResource(accessId)) +
+				databookStatement(databookResource(accessId),
+					"a", databookResource("Access"),
+					databookResource("title"), databookString(accessType),
+					databookResource("owner"), databookResource(userName),
+					databookResource("created"), databookDatetime(startTime),
+					databookResource("finished"), databookDatetime(endTime),
+					databookResource("description"), databookString(description),
+					databookResource("session"), databookResource(sessionId),
+					rdfsResource("label"), databookString(accessType + " by " + userName + " from "+startTime.toString()+" to "+endTime.toString()));
+
+				trans.add(n3StrAdd, Format.N3,
+					DATABOOK_MODEL_URI);
+	} else if (commands[0].equals("describe")) {
+		InputStream ris = database.describe(commands[1],
+				Format.N3);
+		ModelUpdateListener.logFully(ris);
+
+	} else {
+		log.error("Unsupported command '" + message + "'");
+		trans.abort();
+	}
+
+	trans.commit();
+	if(postProc != null) {
+		postProc.run();
+	}
+	
+}
+
+@Override
+public void handle(String message) {
+	log.info("Received AMQP message'" + message + "'");
+	try {
+		update(message);
+		log.info("Model updated");
+	} catch (UnsupportedEncodingException e) {
+		log.error(e.getLocalizedMessage());
+	} catch (RDFServiceException e) {
+		log.error(e.getLocalizedMessage());
+	} catch (RDFDatabaseException e) {
+		log.error(e.getLocalizedMessage());
+	}
+
+}
+}

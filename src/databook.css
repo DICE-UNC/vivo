@@ -1,0 +1,125 @@
+/* style for short-properties */
+
+div.short-property {
+	float: left;
+	margin: 10px;
+	border-style: solid;
+	border-width: 1px;
+	border-color: #dfd;
+	border-radius: 5px;
+}
+
+div.short-property .short-property-name {
+	padding: 5px;
+	float: left;
+/*	border-style: solid;
+	border-width: 1px;
+	border-color: #1ff;*/
+	background: #dfd;
+}
+
+div.short-property .short-property-value {
+	padding: 5px;
+	float: left;
+/*	border-style: solid;
+	border-width: 1px;
+	border-color: #1ff;
+	background: #1ff; */
+}
+
+div.button-property {
+	float: left;
+	margin: 10px;
+	border-style: solid;
+	border-width: 1px;
+	border-color: #ddf;
+	border-radius: 5px;
+}
+
+div.button-property .button-property-name {
+	padding: 5px;
+	float: left;
+/*	border-style: solid;
+	border-width: 1px;
+	border-color: #1ff;*/
+	background: #ddf;
+}
+
+div.button-property .button-property-value {
+	padding: 5px;
+	float: left;
+/*	border-style: solid;
+	border-width: 1px;
+	border-color: #1ff;
+	background: #1ff; */
+}
+
+img.databook-button-image {
+/*	float: left; */
+	margin: 5px;
+	max-height: 20px;
+	max-width: 20px;
+	vertical-align: middle;
+/*	border-style: solid;
+	border-width: 1px;
+	border-color: #ddf;
+	border-radius: 5px;*/
+}
+
+div.post-title {
+  float: left;
+	padding: 5px;
+	background: #ddf;
+}
+div.post-content {
+	padding: 5px;
+}
+.posts-title {
+  	padding: 5px;
+	background: #ddf;
+}
+.posts-input-title {
+  	margin: 5px;
+	width: 600px;
+}
+.posts-input-content {
+  	margin: 5px;
+	width: 600px;
+}
+.posts-input-buttons {
+  	margin: 5px;
+}
+div.post-user {
+  float: left;
+	padding: 5px;
+	font-style: italic;
+}
+div.post-time {
+  float: left;
+	padding: 5px;
+}
+div.post {
+	margin: 5px;
+	border-style: solid;
+	border-width: 1px;
+	border-color: #ddf;
+	border-radius: 5px;
+}
+
+div.posts {
+	margin: 10px;
+	border-style: solid;
+	border-width: 1px;
+	border-color: #ddf;
+	border-radius: 5px;
+}
+
+div#tabs {
+	clear: both;
+	margin: 10px;
+}
+
+/* clear articles so that short properties won't overlap with them */
+article.property {
+	clear: both;
+}

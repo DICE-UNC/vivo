@@ -1,0 +1,323 @@
+def root_dir = "inst"
+def databook_dir = "$root_dir/databook"
+def downloads_dir = "$root_dir/downloads"
+def vivo_dir = "$databook_dir/vivo-rel-1.5"
+def src_dir = "src"
+def icon_dir = "/usr/share/icons/gnome/32x32"
+def ant_home = "$databook_dir/apache-ant-1.8.4"
+def ant_dir = "$ant_home/bin"
+def data_dir = "$databook_dir/data"
+def root_dir_obj = new File(root_dir)
+def databook_dir_obj = new File(databook_dir)
+def downloads_dir_obj = new File(downloads_dir)
+def data_dir_obj = new File(data_dir)
+
+def iconDir = new File("$vivo_dir/productMods/images/icons")
+def databookFormsDir = new File("$vivo_dir/productMods/templates/freemarker/databook/forms/")
+
+task createDirs << {
+  
+    iconDir.mkdirs()
+    databookFormsDir.mkdirs()
+	root_dir_obj.mkdirs()
+	
+	databook_dir_obj.mkdirs()
+
+	downloads_dir_obj.mkdirs()
+	data_dir_obj.mkdirs()
+}
+
+task installVIVO(type:Exec, dependsOn:[createDirs]) {
+	workingDir '.'
+	commandLine 'install_vivo.sh', downloads_dir, databook_dir
+}
+
+
+task copyIcons << {
+  delete "images/**"
+  copy {
+	  from("$icon_dir/actions/document-new.png") {
+	    rename "document-new.png", "create.png"
+	  }
+	  into "images"
+  }
+  copy {
+	  from("$icon_dir/actions/document-open.png") {
+	    rename "document-open.png", "open.png"
+	  }
+	  into "images"
+  }
+  copy {
+	  from ( "$icon_dir/mimetypes/ascii.png") {
+		rename "ascii.png", "read.png"
+	}
+	  into "images"
+  }
+  copy {
+	  from ( "$icon_dir/apps/accessories-text-editor.png") {
+		rename "accessories-text-editor.png", "write.png"
+	}
+	  into "images"
+  }
+  copy {
+	  from ( "$icon_dir/places/folder.png") {
+		rename "folder.png", "close.png"
+	}
+	  into "images"
+  }
+  copy {
+	  from ( "$icon_dir/actions/window-close.png") {
+		rename "window-close.png", "delete.png"
+	}
+	  into "images"
+  }
+  copy {
+	  from ( "$icon_dir/actions/document-save.png") {
+		rename "document-save.png", "update.png"
+	}
+	  into "images"
+  }
+  copy {
+	  from ( "$icon_dir/actions/document-save-as.png") {
+		rename "document-save-as.png", "overwrite.png"
+	}
+	  into "images"
+  }
+  copy {
+	  from ( "$icon_dir/actions/forward.png") {
+		rename "forward.png", "move.png"
+	}
+	  into "images"
+  }
+  copy {
+	  from ( "$icon_dir/actions/system-run.png") {
+		rename "system-run.png", "rule.png"
+	}
+	  into "images"
+  }
+  copy {
+	  from ( "$icon_dir/emblems/emblem-system.png") {
+		rename "emblem-system.png", "microservice.png"
+	}
+	  into "images"
+  }
+  copy {
+	  from ( "$icon_dir/actions/document-save-as.png") {
+		rename "document-save-as.png", "put.png"
+	}
+	  into "images"
+  }
+  copy {
+	  from ( "$icon_dir/emblems/emblem-downloads.png") {
+		rename "emblem-downloads.png", "get.png"
+	}
+	  into "images"
+  }
+  copy {
+	  from ( "$icon_dir/places/folder.png") {
+		rename "folder.png", "coll.png"
+	}
+	  into "images"
+  }
+  copy {
+	  from ( "$icon_dir/mimetypes/ascii.png") {
+		rename "ascii.png", "data.png"
+	}
+	  into "images"
+  }
+  copy {
+	  from ( "$src_dir/images") {
+		rename "ajax-loader.gif", "pacman.gif"
+	}
+	  into "images"
+  }
+
+}
+// remove databook source
+task clean << {
+  println "cleaning $vivo_dir/src/databook, $root_dir"
+  delete "$vivo_dir/src/databook"
+  delete "$root_dir"
+}
+
+task copyProjectFiles(dependsOn: [clean, createDirs, installVIVO]) << {
+  copy {
+    from "$src_dir"
+    into "$vivo_dir/src/"
+  }
+  copy {
+	  from "$src_dir/startup_listeners.txt"
+	  into "$vivo_dir/productMods/WEB-INF/resources"
+  }
+  
+  copy {
+	  from "$src_dir/databook.rdf"
+	  into "$vivo_dir/productMods/WEB-INF/filegraph/tbox"
+  }
+
+  // copy data size list view files
+  copy {
+	  from "$src_dir/dataSizeListView.n3"
+	  into "$vivo_dir/productMods/WEB-INF/ontologies/app/loadedAtStartup"
+  }
+  copy {
+	  from "$src_dir/propStatement-dataSize.ftl"
+	  into "$vivo_dir/productMods/templates/freemarker/body/partials/individual"
+  }
+  copy {
+	  from "$src_dir/listViewConfig-dataSize.xml"
+	  into "$vivo_dir/productMods/config"
+  }
+
+  // copy access history list view files
+  copy {
+	  from "$src_dir/accessHistoryListView.n3"
+	  into "$vivo_dir/productMods/WEB-INF/ontologies/app/loadedAtStartup"
+  }
+  copy {
+	  from "$src_dir/propStatement-accessHistory.ftl"
+	  into "$vivo_dir/productMods/templates/freemarker/body/partials/individual"
+  }
+  copy {
+	  from "$src_dir/listViewConfig-accessHistory.xml"
+	  into "$vivo_dir/productMods/config"
+  }
+
+  // copy session part list view files
+  copy {
+	  from "$src_dir/sessionPartListView.n3"
+	  into "$vivo_dir/productMods/WEB-INF/ontologies/app/loadedAtStartup"
+  }
+
+  // copy discussion list view files
+  copy {
+	  from "$src_dir/discussionListView.n3"
+	  into "$vivo_dir/productMods/WEB-INF/ontologies/app/loadedAtStartup"
+  }
+  copy {
+	  from "$src_dir/propStatement-discussion.ftl"
+	  into "$vivo_dir/productMods/templates/freemarker/body/partials/individual"
+  }
+  copy {
+	  from "$src_dir/listViewConfig-discussion.xml"
+	  into "$vivo_dir/productMods/config"
+  }
+
+  // copy hasPart list view files
+  copy {
+	  from "$src_dir/hasPartListView.n3"
+	  into "$vivo_dir/productMods/WEB-INF/ontologies/app/loadedAtStartup"
+  }
+  copy {
+	  from "$src_dir/propStatement-hasPart.ftl"
+	  into "$vivo_dir/productMods/templates/freemarker/body/partials/individual"
+  }
+  copy {
+	  from "$src_dir/listViewConfig-hasPart.xml"
+	  into "$vivo_dir/productMods/config"
+  }
+  // copy databook js
+  copy {
+	  from "$src_dir/databook.js"
+	  into "$vivo_dir/productMods/js"
+  }
+
+  // copy databook css
+  copy {
+	  from "$src_dir/databook.css"
+	  into "$vivo_dir/productMods/css"
+  }
+
+  // copy icons
+  copy { 
+	  from "image"
+	  into "$vivo_dir/productMods/images/icons"
+  }
+  
+  copy {
+	  from "$src_dir/newDataObjForm.ftl"
+	  into "$vivo_dir/productMods/templates/freemarker/databook/forms/"
+  }
+  copy {
+	  from "$src_dir/newPostForm.ftl"
+	  into "$vivo_dir/productMods/templates/freemarker/databook/forms/"
+  }
+  copy {
+	  from "$src_dir/newShortForm.ftl"
+	  into "$vivo_dir/productMods/templates/freemarker/databook/forms/"
+  }
+  copy {
+	  from "$src_dir/newRecordPartialAjaxRet.ftl"
+	  into "$vivo_dir/productMods/templates/freemarker/databook/"
+  }
+  copy {
+	  from "$src_dir/updateRecordPartialAjaxRet.ftl"
+	  into "$vivo_dir/productMods/templates/freemarker/databook/"
+  }
+  copy {
+	  from "$src_dir/readRecordPartialAjaxRet.ftl"
+	  into "$vivo_dir/productMods/templates/freemarker/databook/"
+  }
+
+  copy {
+	  from "$src_dir/web.xml"
+	  into "$vivo_dir/productMods/WEB-INF"
+  }
+
+  // copy individual ftl
+  copy {
+	  from "$src_dir/individual.ftl"
+	  into "$vivo_dir/productMods/templates/freemarker/body/individual"
+  }
+  copy {
+	  from "$src_dir/individual-properties.ftl"
+	  into "$vivo_dir/productMods/templates/freemarker/body/partials/individual"
+  }
+  copy {
+	  from "$src_dir/individual-vitro.ftl"
+	  into "$vivo_dir/productMods/templates/freemarker/body/individual"
+  }
+}
+
+// copy timeline css and js files
+task copyTimelineFiles << {
+  // copy {
+  //	from "$src_dir/timeline/timeline.css"
+  //	into "$vivo_dir/productMods/css"
+  // }
+  // copy {
+  //	from "$src_dir/timeline/timeline.js"
+  //	into "$vivo_dir/productMods/js"
+  // }
+  copy {
+	  from "$src_dir/timeline"
+	  into "$vivo_dir/productMods"
+  }
+}
+
+// copy jquery-file-upload plugin
+task copyJqueryFileUploadPluginFiles << {
+  copy {
+	  from "$src_dir/fileupload"
+	  into "$vivo_dir/productMods"
+  }
+}
+
+// copy moment js
+task copyMomentJsFiles << {
+  copy {
+	  from "$src_dir/moment.js"
+	  into "$vivo_dir/productMods/js"
+  }
+}
+
+def dependencies = [ copyProjectFiles, copyMomentJsFiles, copyTimelineFiles, copyJqueryFileUploadPluginFiles ]
+task deploy(type: Exec, dependsOn: dependencies) {
+  workingDir "$vivo_dir"
+  commandLine "$ant_dir/ant", "deploy"
+}
+
+task compile(type: Exec, dependsOn: dependencies) {
+  workingDir "$vivo_dir"
+  commandLine "$ant_dir/ant", "all"
+}
