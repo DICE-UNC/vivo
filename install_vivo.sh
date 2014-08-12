@@ -16,6 +16,11 @@ databook_root=root@databook
 echo please enter your mysql root password:
 read mysql_root_password
 
+# mkdirs
+
+mkdir -p downloads_dir
+mkdir -p databook_dir
+
 if [ -e $downloads_dir/$vivo_arc ]; then
 	echo
 else
@@ -31,7 +36,7 @@ popd
 
 # install & setup mysql
 
-sudo apt-get install -y mysql-server mysql-client openjdk-7-jdk gnome-icon-theme-full ant tomcat7
+sudo apt-get install -y mysql-server mysql-client openjdk-7-jdk gnome-icon-theme-full ant tomcat7 gradle
 
 mysql -u root -p"$mysql_root_password" -e "DROP USER '$mysql_username'@'localhost';"
 mysql -u root -p"$mysql_root_password" -e "DROP DATABASE $dbname;"
