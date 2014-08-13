@@ -130,7 +130,6 @@ task copyIcons << {
 task clean << {
   println "cleaning $vivo_dir/src/databook, $root_dir"
   delete "$vivo_dir/src/databook"
-  delete "$root_dir"
 }
 
 task copyProjectFiles(dependsOn: [clean, createDirs]) << {
