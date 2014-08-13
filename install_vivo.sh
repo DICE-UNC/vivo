@@ -1,7 +1,12 @@
 pwd=`pwd`
 downloads_dir=$pwd/$1
 databook_dir=$pwd/$2
-indexing_jar_path=$3
+indexing_url=https://raw.githubusercontent.com/DICE-UNC/indexing-irods/master/install.sh
+if [ "$3" == "" ]; then
+	indexing_jar_path=/var/lib/irods/indexing/indexing/target/index-0.0.1-SNAPSHOT.jar
+else
+	indexing_jar_path=$3
+fi
 tomcat_dir=/var/lib/tomcat7
 vivo_dir=$databook_dir/vivo-rel-1.5
 lib_dir=$vivo_dir/lib
@@ -15,6 +20,16 @@ echo generated password $mysql_password
 databook_root=root@databook
 echo please enter your mysql root password:
 read mysql_root_password
+
+if [ "$3" == "" ]; then
+	# install indexing framework
+	pushd /var/lib/irods
+	wget $indeixng_url
+	chmod install.sh
+	sudo ./install.sh
+	sudo chown -R irods:irods indexing
+	popd
+fi
 
 # mkdirs
 
@@ -36,7 +51,7 @@ popd
 
 # install & setup mysql
 
-sudo apt-get install -y git mysql-server mysql-client openjdk-7-jdk gnome-icon-theme-full ant tomcat7 gradle
+sudo apt-get install -y git mysql-server mysql-client openjdk-6-jdk gnome-icon-theme-full ant tomcat7 gradle
 
 mysql -u root -p"$mysql_root_password" -e "DROP USER '$mysql_username'@'localhost';"
 mysql -u root -p"$mysql_root_password" -e "DROP DATABASE $dbname;"
@@ -66,7 +81,7 @@ popd
 
 # setup databook
 pushd databook_dir
-git checkout https://github.com/DICE-UNC/vivo.git
+git clone https://github.com/DICE-UNC/vivo.git
 cd vivo
 gradle -q deploy
 popd

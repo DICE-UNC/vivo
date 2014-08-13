@@ -28,12 +28,6 @@ task createDirs << {
 	data_dir_obj.mkdirs()
 }
 
-task installVIVO(type:Exec, dependsOn:[createDirs]) {
-	workingDir '.'
-	commandLine 'install_vivo.sh', downloads_dir, databook_dir
-}
-
-
 task copyIcons << {
   delete "images/**"
   copy {
@@ -141,7 +135,7 @@ task clean << {
   delete "$root_dir"
 }
 
-task copyProjectFiles(dependsOn: [clean, createDirs, installVIVO]) << {
+task copyProjectFiles(dependsOn: [clean, createDirs]) << {
   copy {
     from "$src_dir"
     into "$vivo_dir/src/"
