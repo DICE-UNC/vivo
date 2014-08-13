@@ -24,17 +24,17 @@ read mysql_root_password
 if [ "$3" == "" ]; then
 	# install indexing framework
 	pushd /var/lib/irods
-	wget $indeixng_url
-	chmod install.sh
-	sudo ./install.sh
+	sudo wget $indexing_url
+	sudo bash install.sh
 	sudo chown -R irods:irods indexing
 	popd
 fi
 
 # mkdirs
 
-mkdir -p downloads_dir
-mkdir -p databook_dir
+mkdir -p $downloads_dir
+mkdir -p $databook_dir
+mkdir -p $data_dir
 
 if [ -e $downloads_dir/$vivo_arc ]; then
 	echo
@@ -51,7 +51,7 @@ popd
 
 # install & setup mysql
 
-sudo apt-get install -y git mysql-server mysql-client openjdk-6-jdk gnome-icon-theme-full ant tomcat7 gradle
+sudo apt-get install -y git mysql-server mysql-client openjdk-6-jdk gnome-icon-theme-full ant tomcat7
 
 mysql -u root -p"$mysql_root_password" -e "DROP USER '$mysql_username'@'localhost';"
 mysql -u root -p"$mysql_root_password" -e "DROP DATABASE $dbname;"
@@ -76,12 +76,15 @@ sed -i \
  -e 's#^\(rootUser\.emailAddress\s*=\s*\).*$#\1'$vivo_root'#' \
  deploy.properties
 
-ant all
+sudo ant all
 popd
 
 # setup databook
-pushd databook_dir
+pushd $databook_dir
 git clone https://github.com/DICE-UNC/vivo.git
 cd vivo
-gradle -q deploy
+sed -i \
+ -e 's#^\(def root_dir\s*=\s*\).*$#\1'$pwd'#' \
+ build.gradle
+sudo gradle -q compile
 popd
