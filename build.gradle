@@ -6,8 +6,6 @@ def vivo_dir = "$databook_dir/vivo-rel-1.5"
 def lib_dir = "$vivo_dir/lib"
 def src_dir = "src"
 def icon_dir = "/usr/share/icons/gnome/32x32"
-def ant_home = "$databook_dir/apache-ant-1.8.4"
-def ant_dir = "$ant_home/bin"
 def data_dir = "$databook_dir/data"
 def root_dir_obj = new File(root_dir)
 def databook_dir_obj = new File(databook_dir)
@@ -309,10 +307,10 @@ task copyMomentJsFiles << {
 def dependencies = [ copyProjectFiles, copyMomentJsFiles, copyTimelineFiles, copyJqueryFileUploadPluginFiles ]
 task deploy(type: Exec, dependsOn: dependencies) {
   workingDir "$vivo_dir"
-  commandLine "$ant_dir/ant", "deploy"
+  commandLine "ant", "deploy"
 }
 
 task compile(type: Exec, dependsOn: dependencies) {
   workingDir "$vivo_dir"
-  commandLine "$ant_dir/ant", "all"
+  commandLine "ant", "all"
 }
