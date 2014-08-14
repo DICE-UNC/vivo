@@ -5,7 +5,7 @@ databook_dir=$pwd/$2
 indexing_url=https://raw.githubusercontent.com/DICE-UNC/indexing-irods/master/install.sh
 if [ "$3" == "" ]; then
 	indexing_jar_path=/var/lib/irods/indexing/indexing/target/index-0.0.1-SNAPSHOT.jar
-	qpid_jar_path=/var/lib/irods/indexing/qpid-proton-0.7.1/build/proton-j/proton-j-0.7.1.jar
+	qpid_jar_path=/var/lib/irods/indexing/qpid-proton-0.7/build/proton-j/proton-j-0.7.jar
 else
 	indexing_jar_path=$3
 	qpid_jar_path=$4
