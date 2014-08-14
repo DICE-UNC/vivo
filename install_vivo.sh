@@ -1,15 +1,18 @@
 pwd=`pwd`
+echo working dir $pwd
 downloads_dir=$pwd/$1
 databook_dir=$pwd/$2
 indexing_url=https://raw.githubusercontent.com/DICE-UNC/indexing-irods/master/install.sh
 if [ "$3" == "" ]; then
 	indexing_jar_path=/var/lib/irods/indexing/indexing/target/index-0.0.1-SNAPSHOT.jar
+	qpid_jar_path=/var/lib/irods/indexing/qpid-proton-0.7.1/build/proton-j/proton-j-0.7.1.jar
 else
 	indexing_jar_path=$3
+	qpid_jar_path=$4
 fi
 tomcat_dir=/var/lib/tomcat7
 vivo_dir=$databook_dir/vivo-rel-1.5
-lib_dir=$vivo_dir/lib
+lib_dir=$vivo_dir/vitro-core/webapp/lib
 data_dir=$databook_dir/data
 vivo_arc=vivo-rel-1.5.tar.gz
 vivo_url="http://downloads.sourceforge.net/project/vivo/VIVO%20Application%20Source/vivo-rel-1.5.tar.gz"
@@ -60,7 +63,7 @@ mysql -u root -p"$mysql_root_password" -e "CREATE DATABASE $dbname CHARACTER SET
 mysql -u root -p"$mysql_root_password" -e "GRANT ALL ON $dbname.* TO '$mysql_username'@'localhost' IDENTIFIED BY '$mysql_password';"
 
 # setup indexing
-cp $indexing_jar_path $lib_dir
+cp $indexing_jar_path $qpid_jar_path $lib_dir
 
 # setup vivo
 pushd $vivo_dir
@@ -84,7 +87,8 @@ pushd $databook_dir
 git clone https://github.com/DICE-UNC/vivo.git
 cd vivo
 sed -i \
- -e 's#^\(def root_dir\s*=\s*\).*$#\1'$pwd'#' \
+ -e 's#^\(def downloads_dir\s*=\s*\).*$#\1\"'$downloads_dir'\"#' \
+ -e 's#^\(def databook_dir\s*=\s*\).*$#\1\"'$databook_dir'\"#' \
  build.gradle
 sudo gradle -q compile
 popd

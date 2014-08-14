@@ -1,13 +1,11 @@
-def root_dir = "inst"
-def databook_dir = "$root_dir/databook"
-def downloads_dir = "$root_dir/downloads"
+def databook_dir = "databook"
+def downloads_dir = "downloads"
 def indexing_jar_path = "/var/lib/irods/indexing/indexing/target/index-0.0.1-SNAPSHOT.jar"
 def vivo_dir = "$databook_dir/vivo-rel-1.5"
 def lib_dir = "$vivo_dir/lib"
 def src_dir = "src"
 def icon_dir = "/usr/share/icons/gnome/32x32"
 def data_dir = "$databook_dir/data"
-def root_dir_obj = new File(root_dir)
 def databook_dir_obj = new File(databook_dir)
 def downloads_dir_obj = new File(downloads_dir)
 def data_dir_obj = new File(data_dir)
@@ -18,10 +16,7 @@ task createDirs << {
   
     iconDir.mkdirs()
     databookFormsDir.mkdirs()
-	root_dir_obj.mkdirs()
-	
 	databook_dir_obj.mkdirs()
-
 	downloads_dir_obj.mkdirs()
 	data_dir_obj.mkdirs()
 }
