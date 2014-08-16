@@ -109,6 +109,7 @@ popd
 pushd $databook_dir
 git clone https://github.com/DICE-UNC/vivo.git
 cd vivo
+git stash
 git pull
 sed -i \
  -e 's#^\(def downloads_dir\s*=\s*\).*$#\1\"'$downloads_dir'\"#' \
