@@ -18,6 +18,7 @@ lib_dir=$vivo_dir/vitro-core/webapp/lib
 data_dir=$databook_dir/data
 vivo_arc=vivo-rel-1.5.tar.gz
 vivo_url="http://downloads.sourceforge.net/project/vivo/VIVO%20Application%20Source/vivo-rel-1.5.tar.gz"
+vivo_root=root@localhost
 dbname=vivo_databook
 mysql_username=vivo_databook
 mysql_password=`< /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c32`
@@ -82,7 +83,7 @@ sed -i \
  -e 's#^\(VitroConnection\.DataSource\.url\s*=\s*\).*$#\1jdbc:mysql://localhost/'$dbname'#' \
  -e 's#^\(VitroConnection\.DataSource\.username\s*=\s*\).*$#\1'$mysql_username'#' \
  -e 's#^\(VitroConnection\.DataSource\.password\s*=\s*\).*$#\1'$mysql_password'#' \
- -e 's#^\(rootUser\.emailAddress\s*=\s*\).*$#\1'$vivo_root@localhost'#' \
+ -e 's#^\(rootUser\.emailAddress\s*=\s*\).*$#\1'$vivo_root'#' \
  deploy.properties
 
 if [ "$compile_vivo" == "1" ]; then
