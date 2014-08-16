@@ -35,6 +35,7 @@ fi
 
 # mkdirs
 
+sudo rm -rf $databook_dir
 mkdir -p $downloads_dir
 mkdir -p $databook_dir
 mkdir -p $data_dir
@@ -86,6 +87,7 @@ popd
 pushd $databook_dir
 git clone https://github.com/DICE-UNC/vivo.git
 cd vivo
+git pull
 sed -i \
  -e 's#^\(def downloads_dir\s*=\s*\).*$#\1\"'$downloads_dir'\"#' \
  -e 's#^\(def databook_dir\s*=\s*\).*$#\1\"'$databook_dir'\"#' \

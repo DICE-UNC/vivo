@@ -123,7 +123,7 @@ task copyIcons << {
 }
 // remove databook source
 task clean << {
-  println "cleaning $vivo_dir/src/databook, $root_dir"
+  println "cleaning $vivo_dir/src/databook"
   delete "$vivo_dir/src/databook"
 }
 
