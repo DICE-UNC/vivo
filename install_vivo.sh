@@ -1,20 +1,21 @@
 if [ "$1" == "" ]; then
-	echo Usage: install_databook.sh download_dir databook_dir compile_vivo indexing_jar proton_jar
+	echo Usage: install_databook.sh download_dir databook_dir create_db compile_vivo indexing_jar proton_jar
 	exit
 fi
 compile_vivo=$3
+create_db=$4
 pwd=`pwd`
 echo working dir $pwd
 downloads_dir=$pwd/$1
 databook_dir=$pwd/$2
 indexing_jar=index-0.0.1-SNAPSHOT.jar
 indexing_url=https://raw.githubusercontent.com/DICE-UNC/indexing-irods/master/install.sh
-if [ "$4" == "" ]; then
+if [ "$5" == "" ]; then
 	indexing_jar_path=/var/lib/irods/indexing/indexing/target/$indexing_jar
 	qpid_jar_path=/var/lib/irods/indexing/qpid-proton-0.7/build/proton-j/proton-j-0.7.jar
 else
-	indexing_jar_path=$4
-	qpid_jar_path=$5
+	indexing_jar_path=$5
+	qpid_jar_path=$6
 fi
 tomcat_dir=/var/lib/tomcat7
 vivo_dir=$databook_dir/vivo-rel-1.5
@@ -32,7 +33,7 @@ databook_root=root@databook
 echo please enter your mysql root password:
 read mysql_root_password
 
-if [ "$4" == "" ]; then
+if [ "$5" == "" ]; then
 	# install indexing framework
 	pushd /var/lib/irods
 	sudo wget $indexing_url
@@ -69,11 +70,13 @@ popd
 
 sudo apt-get install -y git mysql-server mysql-client openjdk-6-jdk gnome-icon-theme-full ant tomcat7
 
+if [ "$create_db" == "1" ]; then
 mysql -u root -p"$mysql_root_password" -e "DROP USER '$mysql_username'@'localhost';"
 mysql -u root -p"$mysql_root_password" -e "DROP DATABASE $dbname;"
 mysql -u root -p"$mysql_root_password" -e "CREATE USER '$mysql_username'@'localhost' IDENTIFIED BY '$mysql_password';"
 mysql -u root -p"$mysql_root_password" -e "CREATE DATABASE $dbname CHARACTER SET utf8;"
 mysql -u root -p"$mysql_root_password" -e "GRANT ALL ON $dbname.* TO '$mysql_username'@'localhost' IDENTIFIED BY '$mysql_password';"
+fi
 
 # setup indexing
 cp $indexing_jar_path $qpid_jar_path $lib_dir
