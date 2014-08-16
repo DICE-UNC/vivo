@@ -217,7 +217,7 @@ task copyProjectFiles(dependsOn: [clean, createDirs]) << {
 
   // copy icons
   copy { 
-	  from "image"
+	  from "images"
 	  into "$vivo_dir/productMods/images/icons"
   }
   
@@ -278,7 +278,7 @@ task copyTimelineFiles << {
   // }
   copy {
 	  from "$src_dir"
-	  include "timeline"
+	  include "timeline/**"
 	  into "$vivo_dir/productMods"
   }
 }
@@ -287,7 +287,7 @@ task copyTimelineFiles << {
 task copyJqueryFileUploadPluginFiles << {
   copy {
 	  from "$src_dir"
-	  include "fileupload"
+	  include "fileupload/**"
 	  into "$vivo_dir/productMods"
   }
 }
