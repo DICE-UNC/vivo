@@ -30,10 +30,14 @@ package databook.web.controller;
 
 import static databook.utils.ConnectionUtils.adminAccount;
 import static databook.utils.ConnectionUtils.irodsFs;
+import databook.listener.vivo.*;
+import databook.persistence.rule.PersistenceContext;
+import databook.persistence.rule.rdf.ruleset.*;
 
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.fileupload.FileItem;
@@ -44,10 +48,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.irods.jargon.core.connection.IRODSAccount;
 
-import databook.distributed.model.Collection;
-import databook.distributed.model.DataObject;
-import databook.distributed.model.Entity;
-import databook.distributed.model.property.DatabookContext;
 import edu.cornell.mannlib.vitro.webapp.auth.permissions.SimplePermission;
 import edu.cornell.mannlib.vitro.webapp.auth.requestedAction.Actions;
 import edu.cornell.mannlib.vitro.webapp.controller.VitroRequest;
@@ -120,22 +120,26 @@ public class NewDataObjFormFileUploadController extends FreemarkerHttpServlet {
 		String collectionName = subjectUri.substring(from, to);
 		log.info("collection name = " + collectionName);
 		IRODSAccount acc = null;
+		DatabookRuleSet rule = new DatabookRuleSet();
+		
 		try {
 			acc = adminAccount();
-			DatabookContext context = new DatabookContext(null,
-					null, null, irodsFs, acc);
-			Entity<?> entity = null;
+			PersistenceContext pc = new PersistenceContext(null, null, rule, irodsFs, acc);
 			if (dataType.equals("Data Object")) {
-				entity = DataObject.prototype.get()
-						.setLabel(collectionName + "/" + collName)
-						.setInputStream(filecontent);
+				DataObject entity = new DataObject();
+				entity.setLabel(collectionName + "/" + collName);
+				entity.setTempInputStream(filecontent);
+				entity.setStorageLocationRequest(Collections.singletonList(StorageLocationRequest.IRODS));
+				rule.lookupRule(entity).create(entity, null);
+
 			} else if (dataType.equals("Collection")) {
-				entity = Collection.prototype.get().setLabel(
-						collectionName + "/" + collName);
+				Collection entity = new Collection();
+				entity.setLabel(collectionName + "/" + collName);
+				entity.setStorageLocationRequest(Collections.singletonList(StorageLocationRequest.IRODS));
+				rule.lookupRule(entity).create(entity, null);
 			} else {
 				throw new Error("data type error");
 			}
-			entity.persist(context);
 		} catch (Exception e) {
 			throw new Error(e);
 		} finally {

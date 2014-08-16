@@ -44,7 +44,7 @@ import org.apache.commons.logging.LogFactory;
 import databook.local.model.RDFDatabase.Format;
 import databook.local.model.RDFDatabase.RDFDatabaseTransaction;
 import databook.local.model.RDFDatabaseException;
-import databook.local.model.VIVORDFDatabase;
+import databook.listener.vivo.*;
 import edu.cornell.mannlib.vitro.webapp.auth.permissions.SimplePermission;
 import edu.cornell.mannlib.vitro.webapp.auth.requestedAction.Actions;
 import edu.cornell.mannlib.vitro.webapp.beans.Individual;
@@ -105,8 +105,7 @@ public class DeleteRecordPartialAjaxController extends FreemarkerHttpServlet {
 		RDFServiceFactory rdfServiceFactory = RDFServiceUtils
 				.getRDFServiceFactory(getServletContext());
 		RDFService rdfService = rdfServiceFactory.getRDFService();
-		VIVORDFDatabase database = new VIVORDFDatabase(rdfService,
-				webAppDaoFactory);
+		VIVORDFDatabase database = new VIVORDFDatabase(new SimpleRDFServiceWrapper(rdfService));
 		try {
 			RDFDatabaseTransaction trans = database.newTransaction();
 			trans.start();

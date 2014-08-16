@@ -40,6 +40,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import databook.listener.vivo.*;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -54,7 +56,6 @@ import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.ResourceFactory;
 
-import databook.local.model.VIVORDFDatabase;
 import edu.cornell.mannlib.vitro.webapp.auth.permissions.SimplePermission;
 import edu.cornell.mannlib.vitro.webapp.auth.requestedAction.Actions;
 import edu.cornell.mannlib.vitro.webapp.beans.DataProperty;
@@ -123,7 +124,7 @@ public class UpdateRecordPartialAjaxController extends FreemarkerHttpServlet{
 		RDFServiceFactory rdfServiceFactory = RDFServiceUtils
 				.getRDFServiceFactory(getServletContext());
 		RDFService rdfService = rdfServiceFactory.getRDFService();
-		VIVORDFDatabase database = new VIVORDFDatabase(rdfService, webAppDaoFactory);
+		VIVORDFDatabase database = new VIVORDFDatabase(new SimpleRDFServiceWrapper(rdfService));
 		   { /* short properties */
 		   
 			String newValue = vreq.getParameter("newValue");

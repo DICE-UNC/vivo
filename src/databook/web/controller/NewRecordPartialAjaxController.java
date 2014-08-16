@@ -30,14 +30,7 @@ package databook.web.controller;
 
 import static databook.utils.ConnectionUtils.adminAccount;
 import static databook.utils.ConnectionUtils.irodsFs;
-import static databook.utils.ModelUtils.DATABOOK_MODEL_URI;
-import static databook.utils.ModelUtils.databookDatetime;
-import static databook.utils.ModelUtils.databookResource;
-import static databook.utils.ModelUtils.databookResourceNoBracket;
-import static databook.utils.ModelUtils.databookStatement;
-import static databook.utils.ModelUtils.databookString;
-import static databook.utils.ModelUtils.rdfsResourceNoBracket;
-import static databook.utils.ModelUtils.validateUri;
+import static databook.utils.ModelUtils.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -45,34 +38,24 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.net.URI;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.irods.jargon.core.connection.IRODSAccount;
-import org.irods.jargon.core.pub.CollectionAO;
-import org.irods.jargon.core.pub.DataObjectAO;
-import org.irods.jargon.core.pub.domain.AvuData;
-import org.irods.jargon.core.pub.io.IRODSFileFactory;
 
 import com.hp.hpl.jena.rdf.model.Literal;
 import com.hp.hpl.jena.rdf.model.Model;
 import com.hp.hpl.jena.rdf.model.Property;
 import com.hp.hpl.jena.rdf.model.ResourceFactory;
 
-import databook.distributed.model.AVU;
-import databook.distributed.model.Collection;
-import databook.distributed.model.DataEntity;
-import databook.distributed.model.DataObject;
-import databook.distributed.model.DatabookUser;
-import databook.distributed.model.Entity;
-import databook.distributed.model.Multiple;
-import databook.distributed.model.Post;
-import databook.distributed.model.property.DatabookDistributedProperty;
-import databook.distributed.model.property.DatabookContext;
-import databook.local.model.RDFDatabase.Format;
-import databook.local.model.RDFDatabase.RDFDatabaseTransaction;
-import databook.local.model.VIVORDFDatabase;
+import databook.listener.AMQPClient;
+import databook.listener.ModelUpdateListener;
+import databook.listener.vivo.SimpleRDFServiceWrapper;
+import databook.listener.vivo.*;
+import databook.persistence.rule.rdf.ruleset.*;
 import databook.utils.ModelUtils;
 import edu.cornell.mannlib.vitro.webapp.auth.permissions.SimplePermission;
 import edu.cornell.mannlib.vitro.webapp.auth.requestedAction.Actions;
@@ -119,10 +102,12 @@ public class NewRecordPartialAjaxController extends FreemarkerHttpServlet {
 	protected ResponseValues processRequest(VitroRequest vreq) {
 		log.info("^^^ !!! *** file upload *** !!! ^^^");
 
-		String objectUri = null, subjectUri = null, predicateUri = null;
+		String objectUri = null, subjectUri = null, predicateUri = null; 
+		String subjectType = null;
 
 		objectUri = vreq.getParameter("objectUri");
 		subjectUri = vreq.getParameter("subjectUri");
+		// subjectType = vreq.getParameter("subjectType");
 		predicateUri = vreq.getParameter("predicateUri");
 
 		if (subjectUri == null)
@@ -134,6 +119,7 @@ public class NewRecordPartialAjaxController extends FreemarkerHttpServlet {
 		if (objectUri != null) {
 			validateUri(objectUri);
 		}
+		String predicate = ModelUtils.extractId(predicateUri);
 
 		WebappDaoFactory webAppDaoFactory = vreq.getWebappDaoFactory();
 		IndividualDao individualDao = webAppDaoFactory.getIndividualDao();
@@ -142,32 +128,47 @@ public class NewRecordPartialAjaxController extends FreemarkerHttpServlet {
 		RDFServiceFactory rdfServiceFactory = RDFServiceUtils
 				.getRDFServiceFactory(getServletContext());
 		RDFService rdfService = rdfServiceFactory.getRDFService();
-		VIVORDFDatabase database = new VIVORDFDatabase(rdfService,
-				webAppDaoFactory);
+		VIVORDFDatabase database = new VIVORDFDatabase(new SimpleRDFServiceWrapper(rdfService));
 		IRODSAccount acc = null;
 		try {
 			acc = adminAccount();
-			RDFDatabaseTransaction trans = database.newTransaction();
-			trans.start();
-			DatabookContext context = new DatabookContext(
-					database, trans, webAppDaoFactory, irodsFs, acc);
+			DataEntity subjectEntity = null; // ModelUtils.uriToPrototype(subjectUri, context).get(subjectUri, context);
 
-			Entity<?> subjectEntity = null; // ModelUtils.uriToPrototype(subjectUri, context).get(subjectUri, context);
-
+			subjectType = database.getEntityTypeUri(subjectUri);
 			if (predicateUri.equals(ModelUtils.DISCUSSION_URI)) {
 				Date date = new Date();
 				String post = "post" + date.getTime();
 				String title = vreq.getParameter("title");
 				String description = vreq.getParameter("description");
 				String owner = vreq.getParameter("owner");
-				
-				Post postEntity = Post.prototype.get(databookResourceNoBracket(post), context)
-						.setTitle(title)
-						.setDescription(description)
-						.setOwner(DatabookUser.prototype.get(owner, context))
-						.setCreated(date);
-				postEntity.persist(context);
-				((DataEntity<?>)subjectEntity).discussion(context).add(postEntity);
+				String newUri = "Post" + date + owner;
+				String message = 
+						"{ 'messages': [ {"
+						+ "  'operation': 'create',"
+						+ "  'hasParts': [ {"
+						+ "    'type': 'Post',"
+						+ "    'uri': '" + newUri + "',"
+						+ "    'title': '" + StringEscapeUtils.escapeJavaScript(title)+"',"
+						+ "    'description': '" + StringEscapeUtils.escapeJavaScript(description)+"', "
+						+ "    'owner': {"
+						+ "        'type': 'User',"
+						+ "        'uri': '" + StringEscapeUtils.escapeJavaScript(owner) + "'"
+						+ "    },"
+						+ "    'created': " + date.getTime()
+						+ "  } ]"
+						+ "}, {"
+						+ "  'operation': 'union', "
+						+ "  'hasParts': [ {"
+						+ "     'type': '" + subjectType + "', "
+						+ "     'uri': '" + subjectUri + "'"
+						+ "  }, { "
+						+ "     'discussion': [ {"
+						+ "         'uri': '" + newUri + "'"
+						+ "     } ]"
+						+ "  } ]"
+						+ "} ] }";
+				AMQPClient.sendMessage(ModelUpdateListener.AMQP_HOST, ModelUpdateListener.AMQP_QUEUE, message);
+
 				
 			} else if (predicateUri.equals(ModelUtils.LIKED_BY_URI)
 					|| predicateUri.equals(ModelUtils.DISLIKED_BY_URI)) {
@@ -179,29 +180,51 @@ public class NewRecordPartialAjaxController extends FreemarkerHttpServlet {
 				}
 
 				// check if the triple already exists
-				Multiple<DatabookUser> prop = predicateUri.equals(ModelUtils.LIKED_BY_URI) ? ((DataEntity<?>)subjectEntity).likedBy(context) : ((DataEntity<?>)subjectEntity).dislikedBy(context);
-				for(DatabookUser user : prop) {
-					if(user.getUri().equals(objectUri)) {
+				List<String[]> res = (List<String[]>) databook.edsl.googql.Utils.query().use(new SimpleRDFServiceWrapper(rdfService))
+				.node(new URI(subjectUri)).follow(predicateUri).follow(ModelUtils.OWNER_URI).uri().end().run();
+				for(String[] user : res) {
+					if(user[0].equals(objectUri)) {
 						throw new Error("objectUri already exists");
 					}
 				}
 
-				prop.add(DatabookUser.prototype.get(objectUri, context));
+				String message = 
+						"{ 'messages': [ {"
+						+ "  'operation': 'union', "
+						+ "  'hasParts': [ {"
+						+ "     'type': '" + subjectType + "', "
+						+ "     'uri': '" + subjectUri + "'"
+						+ "  }, { "
+						+ "     '"+predicate+"': [ {"
+						+ "         'type': 'User',"
+						+ "         'uri': '" + objectUri + "'"
+						+ "     } ]"
+						+ "  } ]"
+						+ "} ] }";
+				AMQPClient.sendMessage(ModelUpdateListener.AMQP_HOST, ModelUpdateListener.AMQP_QUEUE, message);
 
 			} else if (predicateUri.equals(ModelUtils.METADATA_URI)) {
 				String value = vreq.getParameter("value");
 				String attrib = vreq.getParameter("attribute");
 				String unit = vreq.getParameter("unit");
 
-				AVU avu = AVU.prototype.get()
-						.setAttribute(attrib)
-						.setValue(value)
-						.setUnit(unit);
-				
-				((DataEntity<?>) subjectEntity).metadata(context).add(avu);
+				String message = 
+						"{ 'messages': [ {"
+						+ "  'operation': 'union', "
+						+ "  'hasParts': [ {"
+						+ "     'type': '" + subjectType + "', "
+						+ "     'uri': '" + subjectUri + "'"
+						+ "  }, { "
+						+ "     'metadata': [ {"
+						+ "         'attribute': '" + StringEscapeUtils.escapeJavaScript(attrib) + "',"
+						+ "         'value': '" + StringEscapeUtils.escapeJavaScript(value) + "',"
+						+ "         'unit': '" + StringEscapeUtils.escapeJavaScript(unit) + "'"
+						+ "     } ]"
+						+ "  } ]"
+						+ "} ] }";
+				AMQPClient.sendMessage(ModelUpdateListener.AMQP_HOST, ModelUpdateListener.AMQP_QUEUE, message);
 				
 			}
-			trans.commit();
 		} catch (Exception e) {
 			throw new Error(e);
 		} finally {

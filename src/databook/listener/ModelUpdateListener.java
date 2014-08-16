@@ -20,10 +20,10 @@ import org.irods.jargon.core.connection.IRODSAccount;
 import org.irods.jargon.core.pub.io.IRODSFileFactory;
 import org.irods.jargon.core.pub.io.IRODSFileInputStream;
 
+import databook.listener.vivo.SimpleRDFServiceWrapper;
 import databook.listener.vivo.VIVOIndexer;
 import databook.listener.vivo.VIVORDFDatabase;
 import databook.local.model.RDFDatabase;
-import databook.local.model.RDFServiceWrapper;
 import edu.cornell.mannlib.vitro.webapp.beans.Individual;
 import edu.cornell.mannlib.vitro.webapp.beans.ObjectPropertyStatementImpl;
 import edu.cornell.mannlib.vitro.webapp.dao.IndividualDao;
@@ -43,8 +43,8 @@ public class ModelUpdateListener implements ServletContextListener {
 
 	private ExecutorService execService;
 	static final Log log = LogFactory.getLog(ModelUpdateListener.class);
-	private static final String AMQP_HOST = "localhost";
-	private static final String AMQP_QUEUE = "metaQueue";
+	public static final String AMQP_HOST = "localhost";
+	public static final String AMQP_QUEUE = "metaQueue";
 	private RDFServiceFactory rdfServiceFactory;
 	private RDFService rdfService;
 	public RDFDatabase database;
@@ -73,19 +73,7 @@ public class ModelUpdateListener implements ServletContextListener {
 				rdfServiceFactory = RDFServiceUtils
 						.getRDFServiceFactory(sce.getServletContext());
 				rdfService = rdfServiceFactory.getRDFService();
-				database = new VIVORDFDatabase(new RDFServiceWrapper(){
-
-					@Override
-					public InputStream sparqlSelectQuery(String query) throws Exception {
-						// currently only support CSV from this method
-						// use getRdfServiceImpl to get other formats
-						return rdfService.sparqlSelectQuery(query, edu.cornell.mannlib.vitro.webapp.rdfservice.RDFService.ResultFormat.CSV);
-					}
-
-					@Override
-					public Object getRdfServiceImpl() {
-						return rdfService;
-					}});
+				database = new VIVORDFDatabase(new SimpleRDFServiceWrapper(rdfService));
 				vivoIndex = new VIVOIndexer(database);
 				modelUpdater = new ModelUpdater();
 				modelUpdater.regIndexer(vivoIndex);
