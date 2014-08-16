@@ -63,6 +63,10 @@ public class IrodsDataObjectEntityRule extends RDFEntityRule<databook.persistenc
 			default:
 				throw new RuntimeException("unsupported storage location request "+lr);
 			}
+
+		}
+		if(storageLocationRequest.isEmpty()) {
+			super.create(e, context);
 		}
 	}
 
@@ -94,6 +98,9 @@ public class IrodsDataObjectEntityRule extends RDFEntityRule<databook.persistenc
 			default:
 				throw new RuntimeException("unsupported storage location "+l);
 			}
+		}
+		if(storageLocation.isEmpty()) {
+			super.delete(e, context);
 		}
 	}
 	
