@@ -25,7 +25,7 @@ vivo_arc=vivo-rel-1.5.tar.gz
 vivo_url="http://downloads.sourceforge.net/project/vivo/VIVO%20Application%20Source/vivo-rel-1.5.tar.gz"
 vivo_root=root@localhost
 dbname=vivo_databook
-vivo_webapp_name=vivo_databook
+vivo_webapp_name=vivo
 mysql_username=vivo_databook
 mysql_password=`< /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c32`
 echo generated password $mysql_password
