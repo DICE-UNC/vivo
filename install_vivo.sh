@@ -1,14 +1,16 @@
+compile_vivo=$3
 pwd=`pwd`
 echo working dir $pwd
 downloads_dir=$pwd/$1
 databook_dir=$pwd/$2
+indexing_jar=index-0.0.1-SNAPSHOT.jar
 indexing_url=https://raw.githubusercontent.com/DICE-UNC/indexing-irods/master/install.sh
-if [ "$3" == "" ]; then
-	indexing_jar_path=/var/lib/irods/indexing/indexing/target/index-0.0.1-SNAPSHOT.jar
+if [ "$4" == "" ]; then
+	indexing_jar_path=/var/lib/irods/indexing/indexing/target/$indexing_jar
 	qpid_jar_path=/var/lib/irods/indexing/qpid-proton-0.7/build/proton-j/proton-j-0.7.jar
 else
-	indexing_jar_path=$3
-	qpid_jar_path=$4
+	indexing_jar_path=$4
+	qpid_jar_path=$5
 fi
 tomcat_dir=/var/lib/tomcat7
 vivo_dir=$databook_dir/vivo-rel-1.5
@@ -24,7 +26,7 @@ databook_root=root@databook
 echo please enter your mysql root password:
 read mysql_root_password
 
-if [ "$3" == "" ]; then
+if [ "$4" == "" ]; then
 	# install indexing framework
 	pushd /var/lib/irods
 	sudo wget $indexing_url
@@ -50,7 +52,7 @@ else
 fi
 
 pushd $databook_dir
-tar zxvf $downloads_dir/$vivo_arc 
+tar zxvf $downloads_dir/$vivo_arc
 popd
 
 # install & setup mysql
@@ -65,6 +67,9 @@ mysql -u root -p"$mysql_root_password" -e "GRANT ALL ON $dbname.* TO '$mysql_use
 
 # setup indexing
 cp $indexing_jar_path $qpid_jar_path $lib_dir
+pushd $lib_dir
+unzip -n $indexing_jar \*.jar 
+popd
 
 # setup vivo
 pushd $vivo_dir
@@ -80,7 +85,9 @@ sed -i \
  -e 's#^\(rootUser\.emailAddress\s*=\s*\).*$#\1'$vivo_root'#' \
  deploy.properties
 
-sudo ant all
+if [ "$compile_vivo" == "1" ]; then
+	sudo ant all
+fi
 popd
 
 # setup databook
@@ -93,4 +100,6 @@ sed -i \
  -e 's#^\(def databook_dir\s*=\s*\).*$#\1\"'$databook_dir'\"#' \
  build.gradle
 sudo gradle -q compile
+sudo chown -R tomcat7:tomcat7 $tomcat_dir/webapps
+sudo chown -R tomcat7:tomcat7 $data_dir
 popd
