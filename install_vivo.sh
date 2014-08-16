@@ -82,7 +82,7 @@ sed -i \
  -e 's#^\(VitroConnection\.DataSource\.url\s*=\s*\).*$#\1jdbc:mysql://localhost/'$dbname'#' \
  -e 's#^\(VitroConnection\.DataSource\.username\s*=\s*\).*$#\1'$mysql_username'#' \
  -e 's#^\(VitroConnection\.DataSource\.password\s*=\s*\).*$#\1'$mysql_password'#' \
- -e 's#^\(rootUser\.emailAddress\s*=\s*\).*$#\1'$vivo_root'#' \
+ -e 's#^\(rootUser\.emailAddress\s*=\s*\).*$#\1'$vivo_root@localhost'#' \
  deploy.properties
 
 if [ "$compile_vivo" == "1" ]; then
