@@ -143,27 +143,27 @@ public class NewRecordPartialAjaxController extends FreemarkerHttpServlet {
 				String owner = vreq.getParameter("owner");
 				String newUri = "Post" + date + owner;
 				String message = 
-						"{ 'messages': [ {"
-						+ "  'operation': 'create',"
-						+ "  'hasParts': [ {"
-						+ "    'type': 'Post',"
-						+ "    'uri': '" + newUri + "',"
-						+ "    'title': '" + StringEscapeUtils.escapeJavaScript(title)+"',"
-						+ "    'description': '" + StringEscapeUtils.escapeJavaScript(description)+"', "
-						+ "    'owner': {"
-						+ "        'type': 'User',"
-						+ "        'uri': '" + StringEscapeUtils.escapeJavaScript(owner) + "'"
+						"{ \"messages\": [ {"
+						+ "  \"operation\": \"create\","
+						+ "  \"hasParts\": [ {"
+						+ "    \"type\": \"Post\","
+						+ "    \"uri\": \"" + newUri + "\","
+						+ "    \"title\": \"" + StringEscapeUtils.escapeJavaScript(title)+"\","
+						+ "    \"description\": \"" + StringEscapeUtils.escapeJavaScript(description)+"\", "
+						+ "    \"owner\": {"
+						+ "        \"type\": \"User\","
+						+ "        \"uri\": \"" + StringEscapeUtils.escapeJavaScript(owner) + "\""
 						+ "    },"
-						+ "    'created': " + date.getTime()
+						+ "    \"created\": " + date.getTime()
 						+ "  } ]"
 						+ "}, {"
-						+ "  'operation': 'union', "
-						+ "  'hasParts': [ {"
-						+ "     'type': '" + subjectType + "', "
-						+ "     'uri': '" + subjectUri + "'"
+						+ "  \"operation\": \"union\", "
+						+ "  \"hasParts\": [ {"
+						+ "     \"type\": \"" + subjectType + "\", "
+						+ "     \"uri\": \"" + subjectUri + "\""
 						+ "  }, { "
-						+ "     'discussion': [ {"
-						+ "         'uri': '" + newUri + "'"
+						+ "     \"discussion\": [ {"
+						+ "         \"uri\": \"" + newUri + "\""
 						+ "     } ]"
 						+ "  } ]"
 						+ "} ] }";
@@ -189,15 +189,15 @@ public class NewRecordPartialAjaxController extends FreemarkerHttpServlet {
 				}
 
 				String message = 
-						"{ 'messages': [ {"
-						+ "  'operation': 'union', "
-						+ "  'hasParts': [ {"
-						+ "     'type': '" + subjectType + "', "
-						+ "     'uri': '" + subjectUri + "'"
+						"{ \"messages\": [ {"
+						+ "  \"operation\": \"union\", "
+						+ "  \"hasParts\": [ {"
+						+ "     \"type\": \"" + subjectType + "\", "
+						+ "     \"uri\": \"" + subjectUri + "\""
 						+ "  }, { "
-						+ "     '"+predicate+"': [ {"
-						+ "         'type': 'User',"
-						+ "         'uri': '" + objectUri + "'"
+						+ "     \""+predicate+"\": [ {"
+						+ "         \"type\": \"User\","
+						+ "         \"uri\": \"" + objectUri + "\""
 						+ "     } ]"
 						+ "  } ]"
 						+ "} ] }";
@@ -209,16 +209,16 @@ public class NewRecordPartialAjaxController extends FreemarkerHttpServlet {
 				String unit = vreq.getParameter("unit");
 
 				String message = 
-						"{ 'messages': [ {"
-						+ "  'operation': 'union', "
-						+ "  'hasParts': [ {"
-						+ "     'type': '" + subjectType + "', "
-						+ "     'uri': '" + subjectUri + "'"
+						"{ \"messages\": [ {"
+						+ "  \"operation\": \"union\", "
+						+ "  \"hasParts\": [ {"
+						+ "     \"type\": \"" + subjectType + "\", "
+						+ "     \"uri\": \"" + subjectUri + "\""
 						+ "  }, { "
-						+ "     'metadata': [ {"
-						+ "         'attribute': '" + StringEscapeUtils.escapeJavaScript(attrib) + "',"
-						+ "         'value': '" + StringEscapeUtils.escapeJavaScript(value) + "',"
-						+ "         'unit': '" + StringEscapeUtils.escapeJavaScript(unit) + "'"
+						+ "     \"metadata\": [ {"
+						+ "         \"attribute\": \"" + StringEscapeUtils.escapeJavaScript(attrib) + "\","
+						+ "         \"value\": \"" + StringEscapeUtils.escapeJavaScript(value) + "\","
+						+ "         \"unit\": \"" + StringEscapeUtils.escapeJavaScript(unit) + "\""
 						+ "     } ]"
 						+ "  } ]"
 						+ "} ] }";
@@ -242,7 +242,7 @@ public class NewRecordPartialAjaxController extends FreemarkerHttpServlet {
 				.getObjectPropertyStatements(predicateUri);
 		values.put("predicateUri", predicateUri);
 		values.put("localName",
-				predicateUri.substring(predicateUri.indexOf('#') + 1));
+				predicateUri.substring(predicateUri.indexOf(\"#\") + 1));
 		values.put("statements", objPropStmtList);
 		values.put("statements_size", objPropStmtList.size());
 		return new TemplateResponseValues("newRecordPartialAjaxRet.ftl", values);
@@ -250,7 +250,7 @@ public class NewRecordPartialAjaxController extends FreemarkerHttpServlet {
 
 	// In case of back button confusion
 	// Currently returning an error message:
-	// Later TODO: Per Brian Caruso's instructions, replicate
+	// Later TODO: Per Brian Caruso\"s instructions, replicate
 	// the logic in the original datapropertyBackButtonProblems.jsp
 	private ResponseValues doProcessBackButton(
 			EditConfigurationVTwo configuration,
