@@ -44,7 +44,7 @@ public class ModelUpdateListener implements ServletContextListener {
 	private ExecutorService execService;
 	static final Log log = LogFactory.getLog(ModelUpdateListener.class);
 	public static final String AMQP_HOST = "localhost";
-	public static final String AMQP_QUEUE = "metaQueue";
+	public static final String AMQP_QUEUE = "metaQueue2";
 	private RDFServiceFactory rdfServiceFactory;
 	private RDFService rdfService;
 	public RDFDatabase database;
