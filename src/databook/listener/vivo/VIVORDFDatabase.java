@@ -16,6 +16,7 @@ import databook.edsl.googql.actionHead;
 import databook.local.model.RDFDatabase;
 import databook.local.model.RDFDatabaseException;
 import databook.local.model.RDFServiceWrapper;
+import databook.utils.ModelUtils;
 import edu.cornell.mannlib.vitro.webapp.rdfservice.ChangeSet;
 import edu.cornell.mannlib.vitro.webapp.rdfservice.RDFService.ModelSerializationFormat;
 import edu.cornell.mannlib.vitro.webapp.rdfservice.RDFServiceException;
@@ -155,7 +156,12 @@ public class VIVORDFDatabase implements RDFDatabase {
 
 	@Override
 	public String getEntityTypeUri(String subject) {
-		throw new UnsupportedOperationException();
+		try {
+			return ((List<String[]>)selectQuery().node(new URI(subject)).follow(ModelUtils.IS_A).uri().end().run()).get(0)[0];
+		} catch (URISyntaxException e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 
 	@Override
