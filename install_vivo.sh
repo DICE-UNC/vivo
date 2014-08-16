@@ -20,6 +20,7 @@ vivo_arc=vivo-rel-1.5.tar.gz
 vivo_url="http://downloads.sourceforge.net/project/vivo/VIVO%20Application%20Source/vivo-rel-1.5.tar.gz"
 vivo_root=root@localhost
 dbname=vivo_databook
+vivo_webapp_name=vivo_databook
 mysql_username=vivo_databook
 mysql_password=`< /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c32`
 echo generated password $mysql_password
@@ -82,12 +83,13 @@ cp example.deploy.properties deploy.properties
 sed -i \
  -e 's#^\(Vitro\.defaultNamespace\s*=\s*\).*$#\1http://datafed.org/individual/#' \
  -e 's#^\(tomcat\.home\s*=\s*\).*$#\1'$tomcat_dir'#' \
- -e 's#^\(webapp\.name\s*=\s*\).*$#\1vivo_databook#' \
+ -e 's#^\(webapp\.name\s*=\s*\).*$#\1'$vivo_webapp_name'#' \
  -e 's#^\(vitro\.home\.directory\s*=\s*\).*$#\1'$data_dir'#' \
  -e 's#^\(VitroConnection\.DataSource\.url\s*=\s*\).*$#\1jdbc:mysql://localhost/'$dbname'#' \
  -e 's#^\(VitroConnection\.DataSource\.username\s*=\s*\).*$#\1'$mysql_username'#' \
  -e 's#^\(VitroConnection\.DataSource\.password\s*=\s*\).*$#\1'$mysql_password'#' \
  -e 's#^\(rootUser\.emailAddress\s*=\s*\).*$#\1'$vivo_root'#' \
+ -e 's#^\(vitro.local.solr.url\s*=\s*\).*$#\1http://localhost:8080/'$vivo_webapp_name'solr#' \
  deploy.properties
 
 if [ "$compile_vivo" == "1" ]; then
