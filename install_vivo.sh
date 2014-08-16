@@ -36,6 +36,10 @@ if [ "$4" == "" ]; then
 	popd
 fi
 
+# stop tomcat
+
+sudo service tomcat7 stop
+
 # mkdirs
 
 sudo rm -rf $databook_dir
@@ -104,3 +108,6 @@ sudo gradle -q compile
 sudo chown -R tomcat7:tomcat7 $tomcat_dir/webapps
 sudo chown -R tomcat7:tomcat7 $data_dir
 popd
+
+# start tomcat
+sudo service tomcat7 start
