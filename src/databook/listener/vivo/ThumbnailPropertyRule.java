@@ -23,7 +23,7 @@ import databook.persistence.rule.PersistenceContext;
 import databook.persistence.rule.rdf.ruleset.RDFEntity;
 
 public class ThumbnailPropertyRule<T extends RDFEntity> implements
-		ObjectPropertyRule<T, String> {
+		ObjectPropertyRule<T, String, PersistenceContext> {
 
 	static final Log log = LogFactory.getLog(ThumbnailPropertyRule.class);
 
