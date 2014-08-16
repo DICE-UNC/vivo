@@ -277,7 +277,8 @@ task copyTimelineFiles << {
   //	into "$vivo_dir/productMods/js"
   // }
   copy {
-	  from "$src_dir/timeline"
+	  from "$src_dir"
+	  include "timeline"
 	  into "$vivo_dir/productMods"
   }
 }
@@ -285,7 +286,8 @@ task copyTimelineFiles << {
 // copy jquery-file-upload plugin
 task copyJqueryFileUploadPluginFiles << {
   copy {
-	  from "$src_dir/fileupload"
+	  from "$src_dir"
+	  include "fileupload"
 	  into "$vivo_dir/productMods"
   }
 }
