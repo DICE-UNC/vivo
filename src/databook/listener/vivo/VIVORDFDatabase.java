@@ -28,6 +28,7 @@ public class VIVORDFDatabase implements RDFDatabase {
 
 	public VIVORDFDatabase(RDFServiceWrapper rdfService) {
 
+		this.rdfs = rdfService; 
 		this.rdfService = (edu.cornell.mannlib.vitro.webapp.rdfservice.RDFService) rdfService.getRdfServiceImpl();
 	}
 
