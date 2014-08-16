@@ -55,7 +55,7 @@ public class AMQPClient {
                     Message message = mng.get();
 			        System.out.println("Received '" + message + "'");
                     ++ct;
-			        handler.handle(message.getBody().toString());
+			        handler.handle(((AmqpValue) message.getBody()).getValue().toString());
                 }
             }
             mng.stop();
