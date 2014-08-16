@@ -105,8 +105,8 @@ public class VIVORDFDatabase implements RDFDatabase {
 		String valueOld = null;
 		try {
 			List<String[]> ret = (List<String[]>) selectQuery().node(new URI(subject)).follow(property).sel().end().run();
-			if(!ret.isEmpty()) {
-				valueOld = ret.get(0)[0];
+			if(ret.size() == 2) {
+				valueOld = ret.get(1)[0];
 			}
 		} catch (URISyntaxException e) {
 			log.error("error", e);
@@ -120,7 +120,8 @@ public class VIVORDFDatabase implements RDFDatabase {
 		try {
 			List<String[]> ret = (List<String[]>) selectQuery().node(new URI(subject)).follow(property).sel().end().run();
 			valueOld = new ArrayList<String>();
-			for(String[] ss : ret) {
+			for(int i =1;i<ret.size();i++) {
+				String[] ss = ret.get(i);
 				valueOld.add(ss[0]);
 			}
 		} catch (URISyntaxException e) {
@@ -158,7 +159,7 @@ public class VIVORDFDatabase implements RDFDatabase {
 	@Override
 	public String getEntityTypeUri(String subject) {
 		try {
-			return ((List<String[]>)selectQuery().node(new URI(subject)).follow(ModelUtils.IS_A).uri().end().run()).get(0)[0];
+			return ((List<String[]>)selectQuery().node(new URI(subject)).follow(ModelUtils.IS_A).uri().end().run()).get(1)[0];
 		} catch (URISyntaxException e) {
 			e.printStackTrace();
 		}
