@@ -1,3 +1,7 @@
+if [ "$1" == "" ]; then
+	echo Usage: install_databook.sh download_dir databook_dir compile_vivo indexing_jar proton_jar
+	exit
+fi
 compile_vivo=$3
 pwd=`pwd`
 echo working dir $pwd
