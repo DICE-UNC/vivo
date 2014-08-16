@@ -134,7 +134,7 @@ public class NewRecordPartialAjaxController extends FreemarkerHttpServlet {
 			acc = adminAccount();
 			DataEntity subjectEntity = null; // ModelUtils.uriToPrototype(subjectUri, context).get(subjectUri, context);
 
-			subjectType = database.getEntityTypeUri(subjectUri);
+			subjectType = extractId(database.getEntityTypeUri(subjectUri));
 			if (predicateUri.equals(ModelUtils.DISCUSSION_URI)) {
 				Date date = new Date();
 				String post = "post" + date.getTime();
