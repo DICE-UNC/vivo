@@ -48,7 +48,6 @@ sudo service tomcat7 stop
 
 # mkdirs
 
-sudo rm -rf $databook_dir
 mkdir -p $downloads_dir
 mkdir -p $databook_dir
 mkdir -p $data_dir
@@ -86,6 +85,7 @@ popd
 
 # setup vivo
 pushd $vivo_dir
+if [ "$create_db" == "1" ]; then
 cp example.deploy.properties deploy.properties
 sed -i \
  -e 's#^\(Vitro\.defaultNamespace\s*=\s*\).*$#\1http://datafed.org/individual/#' \
@@ -98,6 +98,7 @@ sed -i \
  -e 's#^\(rootUser\.emailAddress\s*=\s*\).*$#\1'$vivo_root'#' \
  -e 's#^\(vitro.local.solr.url\s*=\s*\).*$#\1http://localhost:8080/'$vivo_webapp_name'solr#' \
  deploy.properties
+fi
 
 if [ "$compile_vivo" == "1" ]; then
 	sudo ant all
