@@ -55,7 +55,7 @@ public class VIVOIndexer implements Indexer {
 			DataEntity dataEntity = parts.get(0);
 			
 			String op = m.getOperation();
-			EntityRule<DataEntity> r = rs.lookupRule(dataEntity);
+			EntityRule<DataEntity, PersistenceContext> r = rs.lookupRule(dataEntity);
 			if(op.equals("create")) {
 				r.create(dataEntity, context);
 			} else if(op.equals("delete")) {

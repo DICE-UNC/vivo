@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.util.Date;
 
+import databook.persistence.rule.PersistenceContext;
 import databook.persistence.rule.RuleRegistry;
 import databook.persistence.rule.TranscientPropertyRule;
 import databook.persistence.rule.rdf.RDFAbstractCollectionPropertyRule;
@@ -35,16 +36,18 @@ public class DatabookRuleSet extends RuleRegistry {
 	
 	public DatabookRuleSet() {
 		
+		TranscientPropertyRule<RDFEntity, Object, PersistenceContext> t2 = new TranscientPropertyRule<RDFEntity, Object, PersistenceContext>();
+
 		registerRule(RDFEntity.class, new RDFEntityRule<RDFEntity>());
-		registerRule(RDFEntity.class, "additionalProperties", Object.class, new TranscientPropertyRule<RDFEntity, Object>());
+		registerRule(RDFEntity.class, "additionalProperties", Object.class, t2);
 		
 		registerRule(Identifier.class, new RDFEntityRule<Identifier>());
 		registerRule(Identifier.class, "identifierType", String.class, new RDFStringPropertyRule<DataEntity>());
 		registerRule(Identifier.class, "identifierValue", String.class, new RDFStringPropertyRule<DataEntity>());
 		
 		registerRule(DataEntity.class, new RDFEntityRule<DataEntity>());
-		registerRule(DataEntity.class, "uri", java.net.URI.class, new TranscientPropertyRule<DataEntity, URI>());
-		registerRule(DataEntity.class, "typeUri", java.net.URI.class, new TranscientPropertyRule<RDFEntity, URI>());
+		registerRule(DataEntity.class, "uri", java.net.URI.class, t2);
+		registerRule(DataEntity.class, "typeUri", java.net.URI.class, t2);
 		registerRule(DataEntity.class, "label", String.class, new RDFStringPropertyRule<DataEntity>());
 		registerRule(DataEntity.class, "id", Identifier.class, new RDFObjectPropertyRule<DataEntity, Identifier>(false));
 		registerRule(DataEntity.class, "type", String.class, new RDFStringPropertyRule<DataEntity>());
@@ -65,8 +68,8 @@ public class DatabookRuleSet extends RuleRegistry {
 		registerRule(DataEntity.class, "accessPermission", java.util.Collection.class, new RDFCollectionPropertyRule<DataEntity, AccessPermission>(true));
 		registerRule(DataEntity.class, "discussion", Post.class, new RDFCollectionPropertyRule<DataEntity, Post>(true));
 		registerRule(DataEntity.class, "storageLocation", java.util.Collection.class, new RDFAbstractCollectionPropertyRule<DataEntity, String>(new StringStringMapping(), false));
-		registerRule(DataEntity.class, "storageLocationRequest", java.util.Collection.class, new TranscientPropertyRule<DataEntity, Collection>());
-		registerRule(DataEntity.class, "tempInputStream", InputStream.class, new TranscientPropertyRule<DataEntity, InputStream>());
+		registerRule(DataEntity.class, "storageLocationRequest", java.util.Collection.class, t2);
+		registerRule(DataEntity.class, "tempInputStream", InputStream.class, t2);
 		registerRule(DataEntity.class, "previewPath", String.class, new RDFStringPropertyRule<DataEntity>());
 		registerRule(DataEntity.class, "previewThumbPath", String.class, new RDFStringPropertyRule<DataEntity>());
 		
