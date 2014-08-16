@@ -242,7 +242,7 @@ public class NewRecordPartialAjaxController extends FreemarkerHttpServlet {
 				.getObjectPropertyStatements(predicateUri);
 		values.put("predicateUri", predicateUri);
 		values.put("localName",
-				predicateUri.substring(predicateUri.indexOf(\"#\") + 1));
+				predicateUri.substring(predicateUri.indexOf('#') + 1));
 		values.put("statements", objPropStmtList);
 		values.put("statements_size", objPropStmtList.size());
 		return new TemplateResponseValues("newRecordPartialAjaxRet.ftl", values);
@@ -250,7 +250,7 @@ public class NewRecordPartialAjaxController extends FreemarkerHttpServlet {
 
 	// In case of back button confusion
 	// Currently returning an error message:
-	// Later TODO: Per Brian Caruso\"s instructions, replicate
+	// Later TODO: Per Brian Caruso's instructions, replicate
 	// the logic in the original datapropertyBackButtonProblems.jsp
 	private ResponseValues doProcessBackButton(
 			EditConfigurationVTwo configuration,
