@@ -145,7 +145,7 @@ public class NewRecordPartialAjaxController extends FreemarkerHttpServlet {
 				String message = 
 						"{ \"messages\": [ {"
 						+ "  \"operation\": \"create\","
-						+ "  \"hasParts\": [ {"
+						+ "  \"hasPart\": [ {"
 						+ "    \"type\": \"Post\","
 						+ "    \"uri\": \"" + newUri + "\","
 						+ "    \"title\": \"" + StringEscapeUtils.escapeJavaScript(title)+"\","
@@ -158,7 +158,7 @@ public class NewRecordPartialAjaxController extends FreemarkerHttpServlet {
 						+ "  } ]"
 						+ "}, {"
 						+ "  \"operation\": \"union\", "
-						+ "  \"hasParts\": [ {"
+						+ "  \"hasPart\": [ {"
 						+ "     \"type\": \"" + subjectType + "\", "
 						+ "     \"uri\": \"" + subjectUri + "\""
 						+ "  }, { "
@@ -191,7 +191,7 @@ public class NewRecordPartialAjaxController extends FreemarkerHttpServlet {
 				String message = 
 						"{ \"messages\": [ {"
 						+ "  \"operation\": \"union\", "
-						+ "  \"hasParts\": [ {"
+						+ "  \"hasPart\": [ {"
 						+ "     \"type\": \"" + subjectType + "\", "
 						+ "     \"uri\": \"" + subjectUri + "\""
 						+ "  }, { "
@@ -211,7 +211,7 @@ public class NewRecordPartialAjaxController extends FreemarkerHttpServlet {
 				String message = 
 						"{ \"messages\": [ {"
 						+ "  \"operation\": \"union\", "
-						+ "  \"hasParts\": [ {"
+						+ "  \"hasPart\": [ {"
 						+ "     \"type\": \"" + subjectType + "\", "
 						+ "     \"uri\": \"" + subjectUri + "\""
 						+ "  }, { "
