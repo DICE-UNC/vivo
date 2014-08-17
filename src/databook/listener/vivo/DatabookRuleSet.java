@@ -63,6 +63,8 @@ public class DatabookRuleSet extends RuleRegistry {
 		registerRule(DataEntity.class, "discussion", java.util.Collection.class, new RDFCollectionPropertyRule<DataEntity, Post>(false));
 		registerRule(DataEntity.class, "likedBy", java.util.Collection.class, new RDFCollectionPropertyRule<DataEntity, User>(false));
 		registerRule(DataEntity.class, "dislikedBy", java.util.Collection.class, new RDFCollectionPropertyRule<DataEntity, User>(false));
+		registerRule(DataEntity.class, "linkedDataEntity", java.util.Collection.class, new RDFCollectionPropertyRule<DataEntity, DataEntity>(false));
+		registerRule(DataEntity.class, "linkedUserEntity", java.util.Collection.class, new RDFCollectionPropertyRule<DataEntity, User>(false));
 		registerRule(DataEntity.class, "metadata", java.util.Collection.class, new IrodsMetadataPropertyRule());
 		registerRule(DataEntity.class, "accessHistory", java.util.Collection.class, new RDFCollectionPropertyRule<DataEntity, Access>(false));
 		registerRule(DataEntity.class, "accessPermission", java.util.Collection.class, new RDFCollectionPropertyRule<DataEntity, AccessPermission>(true));
