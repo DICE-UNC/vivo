@@ -141,7 +141,7 @@ public class NewRecordPartialAjaxController extends FreemarkerHttpServlet {
 				String title = vreq.getParameter("title");
 				String description = vreq.getParameter("description");
 				String owner = vreq.getParameter("owner");
-				String newUri = "Post" + date + owner;
+				String newUri = databookResourceNoBracket("Post" + date.getTime() + owner);
 				String message = 
 						"{ \"messages\": [ {"
 						+ "  \"operation\": \"create\","
