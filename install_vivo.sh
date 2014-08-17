@@ -41,8 +41,7 @@ if [ "$5" == "" ]; then
 	sudo chown -R irods:irods indexing
 	route=`grep metaQueue2 indexing/indexing-camel-router/src/OSGI-INF/blueprint/camel-context.xml`
 	if [ "$route" == "" ]; then
-		sed '/<to.*>/ -i\
-			<to uri="activemq:queue:metaQueue2"/>' -i indexing/indexing-camel-router/src/OSGI-INF/blueprint/camel-context.xml
+		sed '/<to.*>/a <to uri="activemq:queue:metaQueue2"/>' -i indexing/indexing-camel-router/src/OSGI-INF/blueprint/camel-context.xml
 	fi
 	popd
 fi
