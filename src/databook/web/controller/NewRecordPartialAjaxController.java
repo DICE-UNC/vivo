@@ -168,7 +168,7 @@ public class NewRecordPartialAjaxController extends FreemarkerHttpServlet {
 						+ "     } ]"
 						+ "  } ]"
 						+ "} ] }";
-				AMQPClient.sendMessage(ModelUpdateListener.AMQP_HOST, ModelUpdateListener.AMQP_QUEUE, message);
+				ModelUpdateListener.modelUpdater.handle(message);
 
 				
 			} else if (predicateUri.equals(ModelUtils.LIKED_BY_URI)
@@ -203,7 +203,7 @@ public class NewRecordPartialAjaxController extends FreemarkerHttpServlet {
 						+ "     } ]"
 						+ "  } ]"
 						+ "} ] }";
-				AMQPClient.sendMessage(ModelUpdateListener.AMQP_HOST, ModelUpdateListener.AMQP_QUEUE, message);
+				ModelUpdateListener.modelUpdater.handle(message);
 
 			} else if (predicateUri.equals(ModelUtils.METADATA_URI)) {
 				String value = vreq.getParameter("value");
@@ -225,7 +225,7 @@ public class NewRecordPartialAjaxController extends FreemarkerHttpServlet {
 						+ "     } ]"
 						+ "  } ]"
 						+ "} ] }";
-				AMQPClient.sendMessage(ModelUpdateListener.AMQP_HOST, ModelUpdateListener.AMQP_QUEUE, message);
+				ModelUpdateListener.modelUpdater.handle(message);
 				
 			}
 		} catch (Exception e) {
