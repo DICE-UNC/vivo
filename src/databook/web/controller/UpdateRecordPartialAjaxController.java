@@ -40,6 +40,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import databook.config.IrodsConfig;
 import databook.listener.vivo.*;
 
 import org.apache.commons.lang.StringUtils;
@@ -132,8 +133,10 @@ public class UpdateRecordPartialAjaxController extends FreemarkerHttpServlet{
 		   	List<DataPropertyStatement> dataPropStmtList = subject.getDataPropertyStatements(predicateUri);
 			IRODSAccount acc = null;
 			IRODSFileFactory fileFactory = null;
-			acc = adminAccount();
 			try{
+				acc = IRODSAccount
+						.instance(
+								IrodsConfig.getString("irods.host"), IrodsConfig.getInt("irods.port"), IrodsConfig.getString("irods.user"), IrodsConfig.getString("irods.password"), IrodsConfig.getString("irods.home"), IrodsConfig.getString("irods.zone"), IrodsConfig.getString("irods.defaultResource")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
 			  fileFactory = irodsFs.getIRODSFileFactory(acc);
 			  
 			  List<ObjectPropertyStatement> ops = subject.getObjectPropertyStatements("http://vitro.mannlib.cornell.edu/ns/vitro/0.7#mostSpecificType");

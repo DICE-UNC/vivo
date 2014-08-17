@@ -52,9 +52,10 @@ public class ModelUpdateListener implements ServletContextListener {
 	private ServletContext servletContext;
 	private WebappDaoFactory webAppDaoFactory;
 	private UploadedFileHelper uploadedFileHelper;
-	protected VIVOIndexer vivoIndex;
+	public static VIVOIndexer vivoIndex;
 	public static ModelUpdateListener instance = null;
 	public static ModelUpdater modelUpdater;
+	public static Scheduler scheduler;
 	
 
 	@Override
@@ -77,6 +78,8 @@ public class ModelUpdateListener implements ServletContextListener {
 				vivoIndex = new VIVOIndexer(database);
 				modelUpdater = new ModelUpdater();
 				modelUpdater.regIndexer(vivoIndex);
+				scheduler = new SimpleScheduler();
+				vivoIndex.setScheduler(scheduler);
 
 				AMQPClient.receiveMessage(AMQP_HOST, AMQP_QUEUE,
 						modelUpdater);
