@@ -7,6 +7,7 @@ import org.apache.qpid.proton.message.impl.*;
 import org.apache.qpid.proton.messenger.Messenger;
 import org.apache.qpid.proton.messenger.impl.MessengerImpl;
 import org.apache.qpid.proton.amqp.messaging.AmqpValue;
+import org.apache.qpid.proton.amqp.messaging.Data;
 
 import databook.listener.service.MessagingService;
 
@@ -55,7 +56,11 @@ public class AMQPClient {
                     Message message = mng.get();
 			        System.out.println("Received '" + message + "'");
                     ++ct;
+			if(message.getBody() instanceof Data) {
+			        handler.handle(((Data) message.getBody()).getValue().toString().replaceAll("\\\\x..", ""));
+} else {
 			        handler.handle(((AmqpValue) message.getBody()).getValue().toString().replaceAll("\\\\x..", ""));
+}
                 }
             }
             mng.stop();
