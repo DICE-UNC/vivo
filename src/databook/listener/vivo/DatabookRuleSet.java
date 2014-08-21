@@ -1,3 +1,4 @@
+
 package databook.listener.vivo;
 
 
@@ -33,7 +34,7 @@ import databook.persistence.rule.rdf.ruleset.User;
 import databook.persistence.rule.rdf.ruleset.UserLink;
 
 public class DatabookRuleSet extends RuleRegistry {
-	
+
 	public DatabookRuleSet() {
 		
 		TranscientPropertyRule<RDFEntity, Object, PersistenceContext> t2 = new TranscientPropertyRule<RDFEntity, Object, PersistenceContext>();
@@ -72,19 +73,19 @@ public class DatabookRuleSet extends RuleRegistry {
 		registerRule(DataEntity.class, "tempInputStream", InputStream.class, t2);
 		registerRule(DataEntity.class, "previewPath", String.class, new RDFStringPropertyRule<DataEntity>());
 		registerRule(DataEntity.class, "previewThumbPath", String.class, new RDFStringPropertyRule<DataEntity>());
-		
+
 		registerRule(IndividualObject.class, new RDFEntityRule<DataEntity>());
 		registerRule(IndividualObject.class, "replaces", DataEntity.class, new RDFObjectPropertyRule<DataEntity, DataEntity>(false));
 		registerRule(IndividualObject.class, "replacedBy", DataEntity.class, new RDFObjectPropertyRule<DataEntity, DataEntity>(false));
 		registerRule(IndividualObject.class, "hasVersion", String.class, new RDFStringPropertyRule<DataEntity>());
 		registerRule(IndividualObject.class, "dataSize", Double.class, new RDFNumberPropertyRule<DataEntity>());
-		
+
 		registerRule(User.class, new RDFEntityRule<DataEntity>());
 		registerRule(User.class, "contributeTo", java.util.Collection.class, new RDFCollectionPropertyRule<DataEntity, DataEntity>(false));
 		registerRule(User.class, "own", java.util.Collection.class, new RDFCollectionPropertyRule<DataEntity, DataEntity>(false));
 		registerRule(User.class, "like", java.util.Collection.class, new RDFCollectionPropertyRule<DataEntity, DataEntity>(false));
 		registerRule(User.class, "dislike", java.util.Collection.class, new RDFCollectionPropertyRule<DataEntity, DataEntity>(false));
-		
+
 		registerRule(Access.class, new RDFEntityRule<DataEntity>());
 		registerRule(Access.class, "session", java.util.Collection.class, new RDFCollectionPropertyRule<DataEntity, Session>(false));
 		registerRule(Access.class, "finished", Date.class, new RDFTimePropertyRule<DataEntity>());
@@ -105,13 +106,17 @@ public class DatabookRuleSet extends RuleRegistry {
 		registerRule(AVU.class, "attribute", String.class, new RDFStringPropertyRule<AVU>());
 		registerRule(AVU.class, "value", String.class, new RDFStringPropertyRule<AVU>());
 		registerRule(AVU.class, "unit", String.class, new RDFStringPropertyRule<AVU>());
-		
+
 		registerRule(DataObject.class, new IrodsDataObjectEntityRule());
 		registerRule(DataObject.class, "replica", java.util.Collection.class, new RDFCollectionPropertyRule<DataObject, Replica>(true));
-		registerRule(DataEntityLink.class, new RDFEntityRule<DataEntityLink>());
-		registerRule(DataEntityLink.class, "dataEntity", java.util.Collection.class, new RDFObjectPropertyRule<DataEntityLink, DataEntity>(true));
+
+                registerRule(DataEntityLink.class, new RDFEntityRule<DataEntityLink>());
+                registerRule(DataEntityLink.class, "dataEntity", DataEntity.class, new RDFObjectPropertyRule<DataEntityLink, DataEntity>(false));
+                registerRule(DataEntityLink.class, "dataEntityRole", String.class, new RDFStringPropertyRule<DataEntityLink>());
+
 		registerRule(UserLink.class, new RDFEntityRule<UserLink>());
 		registerRule(UserLink.class, "user", java.util.Collection.class, new RDFObjectPropertyRule<UserLink, User>(true));
+		registerRule(UserLink.class, "userRole", String.class, new RDFStringPropertyRule<UserLink>());
 }
 
 
