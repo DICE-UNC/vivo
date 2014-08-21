@@ -23,6 +23,7 @@ import databook.persistence.rule.rdf.RDFCollectionPropertyRule;
 import databook.persistence.rule.rdf.StringObjectMapping;
 import databook.persistence.rule.rdf.ruleset.AVU;
 import databook.persistence.rule.rdf.ruleset.DataEntity;
+import databook.utils.ModelUtils;
 
 public class IrodsMetadataPropertyRule extends RDFCollectionPropertyRule<DataEntity, AVU> {
 
@@ -119,6 +120,8 @@ public class IrodsMetadataPropertyRule extends RDFCollectionPropertyRule<DataEnt
 		return uri;
 	}
 
+	ThumbnailPropertyRule thumb = new ThumbnailPropertyRule();
+	
 	@Override
 	public void create(DataEntity e0, String prop, Collection<AVU> e1, PersistenceContext context) {
 		// irods does not generate ids for avu, fill them in
@@ -126,6 +129,11 @@ public class IrodsMetadataPropertyRule extends RDFCollectionPropertyRule<DataEnt
 			URI uri = context.lookupURIByDataEntityAndAVU(e0, avu);
 			if(uri != null) {
 				throw new RuntimeException("duplicate avu");
+			}
+			if(avu.getAttribute().equals("data:"+ModelUtils.ATTR_PREVIEW)) {
+				thumb.create(e0, ModelUtils.ATTR_PREVIEW, avu.getValue(), context);
+			} else 	if(avu.getAttribute().equals("data:"+ModelUtils.ATTR_THUMB_PREVIEW)) {
+				thumb.create(e0, ModelUtils.ATTR_THUMB_PREVIEW, avu.getValue(), context);
 			}
 			avu.setUri(genUniqueUri());
 		}
