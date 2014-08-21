@@ -33,18 +33,25 @@ databook_root=root@databook
 echo please enter your mysql root password:
 read mysql_root_password
 
+# install indexing framework
+pushd /var/lib/irods
 if [ "$5" == "" ]; then
-	# install indexing framework
-	pushd /var/lib/irods
-	sudo wget $indexing_url
-	sudo bash install.sh
-	sudo chown -R irods:irods indexing
+	if [[ ! -e $indexing_jar_path || ! -e $qpid_jar_path ]]; then
+		sudo wget -N $indexing_url
+		sudo bash install.sh
+		sudo chown -R irods:irods indexing
+	fi
+fi
+# configure additional route
 	route=`grep metaQueue2 indexing/indexing-camel-router/src/OSGI-INF/blueprint/camel-context.xml`
 	if [ "$route" == "" ]; then
-		sed -i '/<to.*>/a <to uri="activemq:queue:metaQueue2"/>' indexing/indexing-camel-router/src/OSGI-INF/blueprint/camel-context.xml
+		sudo sed -i '/<to.*>/a <to uri="activemq:queue:metaQueue2"/>' indexing/indexing-camel-router/src/OSGI-INF/blueprint/camel-context.xml
+		pushd indexing/indexing-camel-router
+		mvn install
+		sudo cp target/*.jar ../apache-servicemix-5.0.1/deploy
+		popd
 	fi
 	popd
-fi
 
 # stop tomcat
 
@@ -56,6 +63,7 @@ mkdir -p $downloads_dir
 mkdir -p $databook_dir
 mkdir -p $data_dir
 
+# download vivo
 if [ -e $downloads_dir/$vivo_arc ]; then
 	echo
 else
@@ -65,6 +73,7 @@ else
 	popd
 fi
 
+# extract vivo
 pushd $databook_dir
 tar zxvf $downloads_dir/$vivo_arc
 popd
@@ -119,10 +128,15 @@ sed -i \
  -e 's#^\(def downloads_dir\s*=\s*\).*$#\1\"'$downloads_dir'\"#' \
  -e 's#^\(def databook_dir\s*=\s*\).*$#\1\"'$databook_dir'\"#' \
  build.gradle
+sudo gradle -q copyIcons
 sudo gradle -q compile
 sudo chown -R tomcat7:tomcat7 $tomcat_dir/webapps
 sudo chown -R tomcat7:tomcat7 $data_dir
 popd
 
 # start tomcat
+sudo service postgresql start
+sudo service irods start
+nohup sudo su - irods -c /var/lib/irods/indexing/elasticsearch-1.1.1/bin/elasticsearch &
+sudo su - irods -c /var/lib/irods/indexing/apache-servicemix-5.0.1/bin/start
 sudo service tomcat7 start
