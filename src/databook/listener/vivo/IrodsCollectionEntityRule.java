@@ -59,7 +59,12 @@ public class IrodsCollectionEntityRule extends RDFEntityRule<databook.persistenc
 			default:
 				throw new RuntimeException("unsupported storage location request "+lr);
 			}
-		}
+			
+		}	
+			
+		if(storageLocationRequest.isEmpty()) { // default to triple store
+				super.create(e, context);
+			}
 	}
 
 	@Override
