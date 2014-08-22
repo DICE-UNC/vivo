@@ -1,0 +1,27 @@
+--- DatabookRuleSet.java
++++ DatabookRuleSet.java
+@@ -101,17 +101,21 @@
+ 
+                registerRule(databook.persistence.rule.rdf.ruleset.Collection.class, new IrodsCollectionEntityRule());
+ 
+-               registerRule(AVU.class, new RDFEntityRule<AVU>()); // TODO change rule
++               // registerRule(AVU.class, new RDFEntityRule<AVU>()); // TODO change rule
+                registerRule(AVU.class, "attribute", String.class, new RDFStringPropertyRule<AVU>());
+                registerRule(AVU.class, "value", String.class, new RDFStringPropertyRule<AVU>());
+                registerRule(AVU.class, "unit", String.class, new RDFStringPropertyRule<AVU>());
+                
+                registerRule(DataObject.class, new IrodsDataObjectEntityRule());
+                registerRule(DataObject.class, "replica", java.util.Collection.class, new RDFCollectionPropertyRule<DataObject,
++
+                registerRule(DataEntityLink.class, new RDFEntityRule<DataEntityLink>());
+-               registerRule(DataEntityLink.class, "dataEntity", java.util.Collection.class, new RDFObjectPropertyRule<DataEnti
++               registerRule(DataEntityLink.class, "dataEntity", DataEntity.class, new RDFObjectPropertyRule<DataEntityLink, Da
++               registerRule(DataEntityLink.class, "dataEntityRole", String.class, new RDFStringPropertyRule<DataEntityLink>())
++
+                registerRule(UserLink.class, new RDFEntityRule<UserLink>());
+-               registerRule(UserLink.class, "user", java.util.Collection.class, new RDFObjectPropertyRule<UserLink, User>(true
++               registerRule(UserLink.class, "user", User.class, new RDFObjectPropertyRule<UserLink, User>(false));
++               registerRule(UserLink.class, "userRole", String.class, new RDFStringPropertyRule<UserLink>());
+ }
+ 
+ 
