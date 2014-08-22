@@ -51,10 +51,11 @@ fi
 		sudo cp target/*.jar ../apache-servicemix-5.0.1/deploy
 		popd
 	fi
-	popd
+# install convert thumbnail script
 sudo cp $databook_dir/vivo/src/convertThumbnail.sh iRODS/server/bin/cmd
 sudo chown irods:irods iRODS/server/bin/cmd/convertThumbnail.sh
 sudo chmod+x irods:irods iRODS/server/bin/cmd/convertThumbnail.sh
+popd
 # stop tomcat
 
 sudo service tomcat7 stop
@@ -82,7 +83,7 @@ popd
 
 # install & setup mysql
 
-sudo apt-get install -y git mysql-server mysql-client openjdk-6-jdk gnome-icon-theme-full ant tomcat7
+sudo apt-get install -y git imagemagick mysql-server mysql-client openjdk-6-jdk gnome-icon-theme-full ant tomcat7
 
 if [ "$create_db" == "1" ]; then
 mysql -u root -p"$mysql_root_password" -e "DROP USER '$mysql_username'@'localhost';"
