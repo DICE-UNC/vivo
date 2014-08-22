@@ -52,7 +52,9 @@ fi
 		popd
 	fi
 	popd
-
+sudo cp $databook_dir/vivo/src/convertThumbnail.sh iRODS/server/bin/cmd
+sudo chown irods:irods iRODS/server/bin/cmd/convertThumbnail.sh
+sudo chmod+x irods:irods iRODS/server/bin/cmd/convertThumbnail.sh
 # stop tomcat
 
 sudo service tomcat7 stop
