@@ -7,6 +7,7 @@ import static databook.utils.ModelUtils.databookStatement;
 import static databook.utils.ModelUtils.extractId;
 
 import java.util.Collection;
+import java.util.Collections;
 
 import databook.local.model.RDFDatabase.Format;
 import databook.persistence.rule.PersistenceContext;
@@ -22,7 +23,7 @@ public class IrodsDataEntityLinkPropertyRule extends RDFCollectionPropertyRule<A
 	@Override
 	public void create(Access e, String prop, Collection<DataEntityLink> o, PersistenceContext context) {
 		for(DataEntityLink ol : o) {
-			context.create(ol.getDataEntity(), extractId(ACCESS_HISTORY_URI.toString()), e);
+			context.union(ol.getDataEntity(), extractId(ACCESS_HISTORY_URI.toString()),Collections.EMPTY_LIST, Collections.singleton(e));
 			//context.getRdfTrans().add(databookStatement(bracket(ol.getDataEntity().getUri()),
 			//	bracket(ACCESS_HISTORY_URI),
 			//	bracket(e.getUri())), 

@@ -20,6 +20,7 @@ import org.irods.jargon.core.connection.IRODSAccount;
 import org.irods.jargon.core.pub.io.IRODSFileFactory;
 import org.irods.jargon.core.pub.io.IRODSFileInputStream;
 
+import databook.config.IrodsConfig;
 import databook.listener.vivo.SimpleRDFServiceWrapper;
 import databook.listener.vivo.VIVOIndexer;
 import databook.listener.vivo.VIVORDFDatabase;
@@ -118,7 +119,9 @@ public class ModelUpdateListener implements ServletContextListener {
 		
 		try {
 		  // all thumbnails/previews have the "image/jpeg" MIME type
-		  IRODSAccount acc = adminAccount();
+		  IRODSAccount acc = IRODSAccount
+					.instance(
+							IrodsConfig.getString("irods.host"), IrodsConfig.getInt("irods.port"), IrodsConfig.getString("irods.user"), IrodsConfig.getString("irods.password"), IrodsConfig.getString("irods.home"), IrodsConfig.getString("irods.zone"), IrodsConfig.getString("irods.defaultResource")); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$;
 		  IRODSFileFactory fileFactory = irodsFs.getIRODSFileFactory(acc);
 		  IRODSFileInputStream fis = fileFactory.instanceIRODSFileInputStream(mainImageObjPath);
 		  FileInfo mainInfo = uploadedFileHelper.createFile(fileNames.name, "image/jpeg", fis);
