@@ -48,6 +48,8 @@ ${stylesheets.add('<link rel="stylesheet" href="${urls.base}/css/individual/indi
 ${stylesheets.add('<link rel="stylesheet" href="${urls.base}/timeline/timeline.css" />')}
 ${stylesheets.add('<link rel="stylesheet" href="${urls.base}/css/databook.css" />')}
 ${stylesheets.add('<link rel="stylesheet" href="http://code.jquery.com/ui/1.10.2/themes/smoothness/jquery-ui.css" />')} 
+${stylesheets.add('<link rel="stylesheet" href="${urls.base}/timeline/graph.css" />')}
+${headScripts.add('<script type="text/javascript" src="${urls.base}/timeline/graph.js"></script>')}
 
 ${headScripts.add('<script type="text/javascript" src="${urls.base}/js/jquery_plugins/jquery.truncator.js"></script>')}
 ${headScripts.add('<script type="text/javascript" src="http://www.google.com/jsapi"></script>')}

@@ -2,8 +2,14 @@ package databook.listener.vivo;
 
 import java.io.InputStream;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.irods.jargon.core.connection.IRODSAccount;
+import org.irods.jargon.core.exception.JargonException;
+import org.irods.jargon.core.pub.IRODSFileSystem;
+
+import databook.config.IrodsConfig;
 import databook.listener.Indexer;
 import databook.listener.ModelUpdateListener;
 import databook.listener.Scheduler;
@@ -16,6 +22,7 @@ import databook.persistence.rule.PersistenceContext;
 import databook.persistence.rule.rdf.ruleset.DataEntity;
 import databook.persistence.rule.rdf.ruleset.Message;
 import databook.persistence.rule.rdf.ruleset.Messages;
+import static databook.utils.ConnectionUtils.*;
 
 public class VIVOIndexer implements Indexer {
 	// private final ModelUpdateListener modelUpdateListener;
@@ -23,12 +30,14 @@ public class VIVOIndexer implements Indexer {
 	static final Logger log = Logger.getLogger("VIVOIndexer");
 	private RDFDatabase database;
 	DatabookRuleSet rs = new DatabookRuleSet();
+	
 	PersistenceContext context = new PersistenceContext(database, null, rs, null, null);
 	Scheduler scheduler;
 
 	public VIVOIndexer(RDFDatabase database) {
 		this.database = database;
-		this.context = new PersistenceContext(database, null, rs, null, null);
+		IRODSAccount irodsAccount = adminAccount();
+		this.context = new PersistenceContext(database, null, rs, irodsFs, irodsAccount);
 	}
 	
 	public PersistenceContext getPersistenceContext() {
@@ -44,6 +53,7 @@ public class VIVOIndexer implements Indexer {
 	public void messages(Messages ms) throws RDFDatabaseException {
 		RDFDatabaseTransaction trans = database.newTransaction();
 		PersistenceContext context = this.getPersistenceContext();
+		
 		context.setRdfTrans(trans);
 		
 		trans.start();

@@ -51,6 +51,7 @@ public class VIVORDFDatabase implements RDFDatabase {
 			try {
 				rdfService.changeSetUpdate(cs);
 			} catch (RDFServiceException e) {
+				e.printStackTrace(); // this goes to catalina.out
 				throw new RDFDatabaseException(e);
 			} finally {
 				for (InputStream is : iss) {
@@ -70,7 +71,9 @@ public class VIVORDFDatabase implements RDFDatabase {
 		}
 
 		public void add(String n3StrAdd, Format format, String model) {
-			log.info("add rdf '" + n3StrAdd + "'");
+			// log.info("add rdf '" + n3StrAdd + "'");
+			
+			System.out.println("add n3 '" + n3StrAdd + "'");
 			InputStream isAdd = new ByteArrayInputStream(n3StrAdd.getBytes());
 			cs.addAddition(isAdd, translate(format), model);
 		}

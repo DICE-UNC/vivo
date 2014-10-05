@@ -15,6 +15,9 @@ function aggregateData(data, start, step, overall) {
 			access["read"] = 0;
 			access["write"] = 0;
 			access["other"] = 0;
+                        access["get"] = 0;
+			access["put"] = 0;
+			access["metadata"] = 0;
 		}
 
 	}
@@ -26,8 +29,14 @@ function aggregateData(data, start, step, overall) {
 	    		var accessCategory;
 			if(action.indexOf("read") != -1) {
 				accessCategory = "read";
+			} else if(action.indexOf("get") != -1) {
+				accessCategory = "get";
 			} else if(action.indexOf("write") != -1) {
 				accessCategory = "write";
+			} else if(action.indexOf("put") != -1) {
+				accessCategory = "put";
+			} else if(action.indexOf("metadata") != -1) {
+				accessCategory = "metadata";
 			} else {
 				accessCategory = "other";
 			}
@@ -40,7 +49,7 @@ function aggregateData(data, start, step, overall) {
 		if(oa) {
 			dataAggre.addRow([date.toDate(), access["access"]]);
 		} else {
-			dataAggre.addRow([date.toDate(), access["read"], access["write"], access["other"]]);
+			dataAggre.addRow([date.toDate(), access["read"], access["write"], access["get"], access["put"], access["metadata"], access["other"]]);
 		}
 
 	}
@@ -51,19 +60,26 @@ function aggregateData(data, start, step, overall) {
 	} else {
 		dataAggre.addColumn("number", "read");
 		dataAggre.addColumn("number", "write");
+		dataAggre.addColumn("number", "get");
+		dataAggre.addColumn("number", "put");
+		dataAggre.addColumn("number", "metadata");
 		dataAggre.addColumn("number", "other");
 	}
 	
 	var rowIndexes = data.getSortedRows(0);
 	resetAccess(dailyAccess);
-	// start should be before the date of the first row
 	var currDate = start;
+        var i = 0;
+	// skip rows before currDate
+        while(i < rowIndexes.length && moment(data.getValue(rowIndexes[i], 0)).isBefore(currDate)) {
+                i++;
+        }
 	
 	// add row for the previous step
 	addRow(dataAggre, currDate.clone().subtract(step), dailyAccess);
 
         var nextStepDate = currDate.clone().add(step);
-	for(var i = 0; i < rowIndexes.length; i++) {
+	for(; i < rowIndexes.length; i++) {
 	    var nextDate = moment(data.getValue(rowIndexes[i], 0));
 	    if(nextDate.isBefore(nextStepDate)) {
 	    	// same date
@@ -77,7 +93,7 @@ function aggregateData(data, start, step, overall) {
 		currDate.add(step);
 		nextStepDate.add(step);
 	   	while(!nextDate.isBefore(nextStepDate)) {
-	    	    addRow(dataAggre, nextStepDate.clone(), dailyAccess);
+	    	    addRow(dataAggre, currDate.clone(), dailyAccess);
 		    currDate.add(step);
 		    nextStepDate.add(step);
 	    	}
@@ -91,21 +107,30 @@ function aggregateData(data, start, step, overall) {
 				
 	// add row to today
 	resetAccess(dailyAccess);
-        var today = moment();
-	for(currDate.add(step); currDate.isBefore(today); currDate.add(step)) {
-	    addRow(dataAggre, currDate.clone(), dailyAccess);
-	}
+        addRow(dataAggre, currDate.clone().add(step), dailyAccess);
+        //var today = moment();
+	//for(currDate.add(step); currDate.isBefore(today); currDate.add(step)) {
+	//    addRow(dataAggre, currDate.clone(), dailyAccess);
+	//}
 	return dataAggre;
 }
-	
+var timeline;
+var currdata;
 function drawAccessHistoryTimeline(data) {
+        if(!timeline) {
+                timeline = new links.Timeline(document.getElementById("accessHistoryTimeline"));
+        };
 	options = {
 	  width:  "100%",
 	  height: "99%",
 	  style: "box"
 	};
-	var timeline = new links.Timeline(document.getElementById("accessHistoryTimeline"));
-	timeline.draw(data, options);
+        
+        if(currdata && JSON.stringify(currdata) === JSON.stringify(data)) { 
+        } else {
+	        currdata = data;
+                timeline.draw(data, options);
+        }
 }
 
 function drawAccessHistoryLineChart(data) {
@@ -152,7 +177,11 @@ function drawAccessHistoryLineChart(data) {
 			step = moment.duration(1, "M");
 		}
 		var dataAggre = aggregateData(data, start, step, overall);
-		if(val === "Week") {
+		if(val === "Hour") {
+                        duration = moment.duration(1,"h");
+                } else if (val === "Day") {
+                        duration = moment.duration(1,"d");
+                } else if(val === "Week") {
 			duration = moment.duration(1, "w");
 		} else if(val === "Month") {
 			duration = moment.duration(1, "M");
@@ -160,6 +189,7 @@ function drawAccessHistoryLineChart(data) {
 			duration = moment.duration(1, "y");
 		}
 		options.hAxis.viewWindow.min = moment().subtract(duration).toDate();
+                //options.isStacked = true;
 		lineChart.draw(dataAggre, options);
 	}
 
@@ -324,7 +354,7 @@ function generateHasPart(statement) {
 	  '<img class="databook-image-small" title="'+title+'" src="' + src + '"/>' +
       '</div>';
       
-  var ownerLabel = statement.ownerLabel || statement.owner && statement.owner.substring(statement.owner.indexOf("#")+1);
+  var ownerLabel = statement.ownerLabel || statement.owner && statement.owner.substring(statement.owner.lastIndexOf("/")+1);
   var userdiv = '<div class="post-user">' +
 	(statement.owner !== null?
 	  '<a href="/vivo/individual?uri=' + encodeURIComponent(statement.owner) +'">' +
@@ -356,6 +386,85 @@ function ajaxGet(url, handler) {
 		data.lastIndexOf("</ret>")
       ));
   });					  
+}
+
+function ajaxGetJson(url, req, handler) {
+  $.post(url, JSON.stringify(req),
+    function(data){
+      handler(data);
+  });
+}
+var MAX_RES_SIZE = 100000000;
+function buildEsQuery(uri, linkprop) {
+        var q1 = {};
+
+        q1[linkprop]=uri;
+                                   
+        var q = {
+                "from": 0,
+                "size": MAX_RES_SIZE, 
+                "_source": {
+                    "exclude": ["fulltext"]
+                },
+                "sort": {
+                    "created" : {"order":"asc"}
+                },
+                "query": {
+                    "bool": {
+                        "must": [{
+                            "range": {
+                                "created": {
+                                    "from": moment().subtract(1, "year").valueOf(),
+                                    "to": moment().valueOf()
+                                }
+                            }
+                        }, {
+                            "match": {
+                                "type": "databook.persistence.rule.rdf.ruleset.Access"
+                            }
+                        }, {
+                            "term": q1               
+                        }]
+                    }
+                }
+        };
+        return q;
+}
+
+function refreshDraw(uri, type) {
+        var eshost = "localhost";
+        var query = buildEsQuery(uri, type === "user"?"linkingUser.user.uri":"linkingDataEntity.dataEntity.uri");
+				      ajaxGetJson("http://"+eshost+":9200/databook/entity/_search", query, function(data0) {
+				          // extract from data0 rows
+				          var rows = esToGoogleTable(data0);
+                          var data = new google.visualization.DataTable({
+                              cols: [
+                                  {id: "start", label: "start", type: "datetime"},
+                                  {id: "end", label: "end", type: "datetime"},
+                                  {id: "content", label: "content", type: "string"},
+                                  {id: "action", label: "action", type: "string"}
+                              ],
+                              rows: rows
+                          });
+                          drawAccessHistoryFromData(data);
+                      
+                      })
+}
+function esToGoogleTable(data0) {
+  // target format
+  var rows = [];
+  for(var i = 0;i<data0.hits.hits.length;i++) {
+          var hit = data0.hits.hits[i]._source;
+                //alert(hit);
+          rows.push({c:[
+                {v: moment(hit.created).toDate()}, // start
+                {}, // finish
+                {v: "<a class='timeline-event-link' href='individual?uri=file://"+hit.uri+"'>"+hit.description+"</a>"}, // description
+                {v: hit.title} // access type
+          ]});
+  }
+  //alert(rows);
+  return rows;
 }
 
 function DescIterator(list) {

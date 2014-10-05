@@ -1,5 +1,5 @@
 if [ "$1" == "" ]; then
-	echo Usage: install_databook.sh download_dir databook_dir create_db compile_vivo indexing_jar proton_jar
+	echo Usage: install_databook.sh download_dir databook_dir compile_vivo create_db indexing_dir indexing_jar proton_jar
 	exit
 fi
 compile_vivo=$3
@@ -10,12 +10,19 @@ downloads_dir=$pwd/$1
 databook_dir=$pwd/$2
 indexing_jar=index-0.0.1-SNAPSHOT.jar
 indexing_url=https://raw.githubusercontent.com/DICE-UNC/indexing-irods/master/install.sh
+vivo_repo=~/git/vivo #https://github.com/DICE-UNC/vivo.git
 if [ "$5" == "" ]; then
-	indexing_jar_path=/var/lib/irods/indexing/indexing/target/$indexing_jar
-	qpid_jar_path=/var/lib/irods/indexing/qpid-proton-0.7/build/proton-j/proton-j-0.7.jar
+	indexing_dir=/var/lib/irods/indexing
 else
-	indexing_jar_path=$5
-	qpid_jar_path=$6
+	indexing_dir=$5
+fi
+camel_config=$indexing_dir/indexing-camel-router/src/OSGI-INF/blueprint/camel-context.xml
+if [ "$6" == "" ]; then
+	indexing_jar_path=$indexing_dir/indexing/target/$indexing_jar
+	qpid_jar_path=$indexing_dir/qpid-proton-0.7/build/proton-j/proton-j-0.7.jar
+else
+	indexing_jar_path=$6
+	qpid_jar_path=$7
 fi
 tomcat_dir=/var/lib/tomcat7
 vivo_dir=$databook_dir/vivo-rel-1.5
@@ -43,18 +50,21 @@ if [ "$5" == "" ]; then
 	fi
 fi
 # configure additional route
-	route=`grep metaQueue2 indexing/indexing-camel-router/src/OSGI-INF/blueprint/camel-context.xml`
+	route=`grep metaQueue2 $indexing_dir/indexing-camel-router/src/OSGI-INF/blueprint/camel-context.xml`
 	if [ "$route" == "" ]; then
-		sudo sed -i '/<to.*>/a <to uri="activemq:queue:metaQueue2"/>' indexing/indexing-camel-router/src/OSGI-INF/blueprint/camel-context.xml
-		pushd indexing/indexing-camel-router
+		sudo sed -i '/<to.*>/a <to uri="activemq:queue:metaQueue2"/>' $camel_config
+		pushd $indexing_dir/indexing-camel-router
 		mvn install
 		sudo cp target/*.jar ../apache-servicemix-5.0.1/deploy
 		popd
 	fi
+# configure elastic search
+curl -XPUT 'http://localhost:9200/databook/entity/_mapping' -d '{"properties":{"linkingDataEntity.dataEntity.uri":{"type":"string", "index":"not_analyzed"}}}'
+curl -XPUT 'http://localhost:9200/databook/entity/_mapping' -d '{"properties":{"linkingUser.user.uri":{"type":"string", "index":"not_analyzed"}}}'
 # install convert thumbnail script
 sudo cp $databook_dir/vivo/src/convertThumbnail.sh iRODS/server/bin/cmd
 sudo chown irods:irods iRODS/server/bin/cmd/convertThumbnail.sh
-sudo chmod+x irods:irods iRODS/server/bin/cmd/convertThumbnail.sh
+sudo chmod +x iRODS/server/bin/cmd/convertThumbnail.sh
 popd
 # stop tomcat
 
@@ -78,7 +88,7 @@ fi
 
 # extract vivo
 pushd $databook_dir
-tar zxvf $downloads_dir/$vivo_arc
+tar zxvf $downloads_dir/$vivo_arc > vivo_install.log
 popd
 
 # install & setup mysql
@@ -123,10 +133,11 @@ popd
 
 # setup databook
 pushd $databook_dir
-git clone https://github.com/DICE-UNC/vivo.git
+sudo rm -rf vivo
+git clone $vivo_repo
 cd vivo
 git stash
-git pull
+git pull $vivo_repo
 sed -i \
  -e 's#^\(def downloads_dir\s*=\s*\).*$#\1\"'$downloads_dir'\"#' \
  -e 's#^\(def databook_dir\s*=\s*\).*$#\1\"'$databook_dir'\"#' \
@@ -140,6 +151,6 @@ popd
 # start tomcat
 sudo service postgresql start
 sudo service irods start
-nohup sudo su - irods -c /var/lib/irods/indexing/elasticsearch-1.1.1/bin/elasticsearch &
-sudo su - irods -c /var/lib/irods/indexing/apache-servicemix-5.0.1/bin/start
+nohup sudo su - irods -c $indexing_dir/elasticsearch-1.1.1/bin/elasticsearch &
+sudo su - irods -c $indexing_dir/apache-servicemix-5.0.1/bin/start
 sudo service tomcat7 start

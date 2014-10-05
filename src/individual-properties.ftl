@@ -96,6 +96,64 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			</div>			
 		</#if>
 	</#list>
+	<#-- pull es data -->
+	             <#-- start javascript widgets -->
+              <div id="tabs">
+                  <ul>
+                      <li><a href="#accessHistoryTimelineDiv">Timeline</a></li>
+                      <li><a href="#accessHistoryLineChartDiv">Line Chart</a></li>
+                  </ul>
+                  <div id="accessHistoryTimelineDiv"> 
+                      <div id="accessHistoryTimeline" style="height:490px"> timeline goes here </div>
+                  </div>
+                  <div id="accessHistoryLineChartDiv">
+                      <div id="accessHistoryLineChart" style="height:290px"> line chart goes here </div>
+                      <form>
+                          <div id="lineChartRadios">
+                              <input type="radio" id="lineChartRadio4" name="lineChartRadioGroup" value="Hour" checked="checked" /><label for="lineChartRadio4">Hour</label>
+                              <input type="radio" id="lineChartRadio5" name="lineChartRadioGroup" value="Day"/><label for="lineChartRadio5">Day</label>
+                              <input type="radio" id="lineChartRadio1" name="lineChartRadioGroup" value="Week"/><label for="lineChartRadio1">Week</label>
+                              <input type="radio" id="lineChartRadio2" name="lineChartRadioGroup" value="Month" /><label for="lineChartRadio2">Month</label>
+                              <input type="radio" id="lineChartRadio3" name="lineChartRadioGroup" value="Year"/><label for="lineChartRadio3">Year</label>
+                          </div>
+                          <div id="lineChartAggreRadios">
+                              <input type="radio" id="lineChartAggreRadio1" name="lineChartAggreRadioGroup" value="By Minute" checked="checked" /><label for="lineChartAggreRadio1">By Minute</label>
+                              <input type="radio" id="lineChartAggreRadio2" name="lineChartAggreRadioGroup" value="By Hour" /><label for="lineChartAggreRadio2">By Hour</label>
+                              <input type="radio" id="lineChartAggreRadio3" name="lineChartAggreRadioGroup" value="By Day"/><label for="lineChartAggreRadio3">By Day</label>
+                              <input type="radio" id="lineChartAggreRadio4" name="lineChartAggreRadioGroup" value="By Month" /><label for="lineChartAggreRadio4">By Month</label>
+                          </div>
+                          <div id="lineChartTypeRadios">
+                              <input type="radio" id="lineChartTypeRadio1" name="lineChartTypeRadioGroup" value="Overall" checked="checked" /><label for="lineChartTypeRadio1">Overall</label>
+                              <input type="radio" id="lineChartTypeRadio2" name="lineChartTypeRadioGroup" value="Read/Write" /><label for="lineChartTypeRadio2">Read/Write</label>
+                          </div>
+                      </form>
+                  </div>
+              </div>
+              <script>
+                 var type = 
+                 <#if individual.mostSpecificTypes?seq_contains("Databook User")>
+                     "user"
+                 <#else>
+                     "data object"
+                 </#if>;
+                 var uri = decodeURIComponent("${subjectUri[1]?js_string}"); 
+                 <#if individual.mostSpecificTypes?seq_contains("Databook User")>
+                    uri = uri.substring(uri.lastIndexOf("/")+1);
+                 <#else>
+                    uri = uri.substring(7);
+                 </#if>
+                 
+                  google.load("visualization", "1", {packages:["corechart"]});
+                  google.setOnLoadCallback(drawAccessHistory);
+                  var refreshRate = 3000;
+                  function drawAccessHistory() {
+                      refreshDraw(uri, type);
+                      setTimeout(drawAccessHistory, refreshRate);
+                      
+                      
+                  }
+                  
+              </script>
         <#-- List the properties in the group -->
         <#list group.properties as property>
 		<#if bigPropertyList?seq_contains(property.localName) >
@@ -123,57 +181,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 			    </script>
 			  </div> <!-- end property -->
 			<#else>
-			  <#-- start javascript widgets -->
-			  <div id="tabs">
-				  <ul>
-					  <li><a href="#accessHistoryTimelineDiv">Timeline</a></li>
-					  <li><a href="#accessHistoryLineChartDiv">Line Chart</a></li>
-				  </ul>
-				  <div id="accessHistoryTimelineDiv"> 
-					  <div id="accessHistoryTimeline" style="height:490px"> timeline goes here </div>
-				  </div>
-				  <div id="accessHistoryLineChartDiv">
-					  <div id="accessHistoryLineChart" style="height:290px"> line chart goes here </div>
-					  <form>
-						  <div id="lineChartRadios">
-							  <input type="radio" id="lineChartRadio1" name="lineChartRadioGroup" value="Week"/><label for="lineChartRadio1">Week</label>
-							  <input type="radio" id="lineChartRadio2" name="lineChartRadioGroup" value="Month" /><label for="lineChartRadio2">Month</label>
-							  <input type="radio" id="lineChartRadio3" name="lineChartRadioGroup" value="Year" checked="checked" /><label for="lineChartRadio3">Year</label>
-						  </div>
-						  <div id="lineChartAggreRadios">
-							  <input type="radio" id="lineChartAggreRadio1" name="lineChartAggreRadioGroup" value="By Minute"/><label for="lineChartAggreRadio1">By Minute</label>
-							  <input type="radio" id="lineChartAggreRadio2" name="lineChartAggreRadioGroup" value="By Hour" /><label for="lineChartAggreRadio2">By Hour</label>
-							  <input type="radio" id="lineChartAggreRadio3" name="lineChartAggreRadioGroup" value="By Day" checked="checked" /><label for="lineChartAggreRadio3">By Day</label>
-							  <input type="radio" id="lineChartAggreRadio4" name="lineChartAggreRadioGroup" value="By Month" /><label for="lineChartAggreRadio4">By Month</label>
-						  </div>
-						  <div id="lineChartTypeRadios">
-							  <input type="radio" id="lineChartTypeRadio1" name="lineChartTypeRadioGroup" value="Overall" checked="checked" /><label for="lineChartTypeRadio1">Overall</label>
-							  <input type="radio" id="lineChartTypeRadio2" name="lineChartTypeRadioGroup" value="Read/Write" /><label for="lineChartTypeRadio2">Read/Write</label>
-						  </div>
-					  </form>
-				  </div>
-			  </div>
-			  <script>
-				  google.load("visualization", "1", {packages:["corechart"]});
-				  google.setOnLoadCallback(drawAccessHistory);
-
-				  function drawAccessHistory() {
-					  var data = new google.visualization.DataTable({
-						  cols: [
-							  {id: "start", label: "start", type: "datetime"},
-							  {id: "end", label: "end", type: "datetime"},
-							  {id: "content", label: "content", type: "string"},
-							  {id: "action", label: "action", type: "string"}
-						  ],
-						  rows: [
-							  <#list property.statements as statement>
-								  <#include "${property.template}">
-							  </#list>
-						  ]});
-
-					  drawAccessHistoryFromData(data);
-				  }
-			  </script>
+                <#-- discussion only -->
 			</#if>
 		</#if>
 	</#list>

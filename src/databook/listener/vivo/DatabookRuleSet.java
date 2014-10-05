@@ -2,11 +2,19 @@
 package databook.listener.vivo;
 
 
+import static databook.utils.ModelUtils.DATABOOK_MODEL_URI;
+import static databook.utils.ModelUtils.IS_A;
+import static databook.utils.ModelUtils.bracket;
+import static databook.utils.ModelUtils.databookStatement;
+
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
+import databook.local.model.RDFDatabase.Format;
 import databook.persistence.rule.PersistenceContext;
 import databook.persistence.rule.RuleRegistry;
 import databook.persistence.rule.TranscientPropertyRule;
@@ -35,6 +43,7 @@ import databook.persistence.rule.rdf.ruleset.StorageLocation;
 import databook.persistence.rule.rdf.ruleset.StorageLocationRequest;
 import databook.persistence.rule.rdf.ruleset.User;
 import databook.persistence.rule.rdf.ruleset.UserLink;
+import databook.utils.ModelUtils;
 
 public class DatabookRuleSet extends RuleRegistry {
 
@@ -58,12 +67,12 @@ public class DatabookRuleSet extends RuleRegistry {
 		registerRule(DataEntity.class, "type", String.class, new RDFStringPropertyRule<DataEntity>());
 		registerRule(DataEntity.class, "hasPart", (Class<java.util.Collection<DataEntity>>)class1, new RDFCollectionPropertyRule<DataEntity, DataEntity>(false));
 		registerRule(DataEntity.class, "related", class1, new RDFCollectionPropertyRule<DataEntity, DataEntity>(false));
-		registerRule(DataEntity.class, "partOf", class1, new RDFCollectionPropertyRule<DataEntity, DataEntity>(false));
+		registerRule(DataEntity.class, "partOf", class1, new RDFCollectionPropertyRule<DataEntity, DataEntity>(true));
 		registerRule(DataEntity.class, "description", String.class, new RDFStringPropertyRule<DataEntity>());
 		registerRule(DataEntity.class, "title", String.class, new RDFStringPropertyRule<DataEntity>());
 		registerRule(DataEntity.class, "created", Date.class, new RDFTimePropertyRule<DataEntity>());
 		registerRule(DataEntity.class, "submitted", Date.class, new RDFTimePropertyRule<DataEntity>());
-		registerRule(DataEntity.class, "owner", User.class, new RDFObjectPropertyRule<DataEntity, User>(false));
+		registerRule(DataEntity.class, "owner", User.class, new RDFObjectPropertyRule<DataEntity, User>(true));
 		registerRule(DataEntity.class, "contributor", (Class<java.util.Collection<User>>)class1, new RDFCollectionPropertyRule<DataEntity, User>(false));
 		registerRule(DataEntity.class, "discussion", (Class<java.util.Collection<Post>>)class1, new RDFCollectionPropertyRule<DataEntity, Post>(false));
 		registerRule(DataEntity.class, "likedBy", (Class<java.util.Collection<User>>)class1, new RDFCollectionPropertyRule<DataEntity, User>(false));
@@ -83,7 +92,13 @@ public class DatabookRuleSet extends RuleRegistry {
 		registerRule(IndividualObject.class, "hasVersion", String.class, new RDFStringPropertyRule<IndividualObject>());
 		registerRule(IndividualObject.class, "dataSize", Double.class, new RDFNumberPropertyRule<IndividualObject>());
 
-		registerRule(User.class, new RDFEntityRule<User>());
+		registerRule(User.class, new RDFEntityRule<User>() {
+			public void create(User e, PersistenceContext context) {
+				super.create(e, context);
+				context.getRdfTrans().add(databookStatement(bracket(e.getUri()), bracket(ModelUtils.LABEL_URI), ModelUtils.databookString(e.getUri().toString())),
+						Format.N3, ModelUtils.LABEL_MODEL_URI);
+			}
+		});
 		registerRule(User.class, "contributeTo", class1, new RDFCollectionPropertyRule<User, DataEntity>(false));
 		registerRule(User.class, "own", class1, new RDFCollectionPropertyRule<User, DataEntity>(false));
 		registerRule(User.class, "like", class1, new RDFCollectionPropertyRule<User, DataEntity>(false));
@@ -109,7 +124,26 @@ public class DatabookRuleSet extends RuleRegistry {
 		registerRule(AVU.class, "attribute", String.class, new RDFStringPropertyRule<AVU>());
 		registerRule(AVU.class, "value", String.class, new RDFStringPropertyRule<AVU>());
 		registerRule(AVU.class, "unit", String.class, new RDFStringPropertyRule<AVU>());
-
+		
+		registerRule(Collection.class, new IrodsCollectionEntityRule(){
+			public void create(Collection e, PersistenceContext context) {
+				super.create(e, context);
+				try {
+					// uri is available only when it comes from irods
+					// we also need to avoid double labeling 	
+					if(!e.getStorageLocationRequest().contains(StorageLocationRequest.IRODS) && ((List<String[]>)context.getRdfDb().selectQuery().node(new URI("file://"+e.getUri())).follow(ModelUtils.LABEL_URI).uri().end().run()).size() == 1) {
+						URI uri = e.getUri();
+						String uristr = uri.toString();
+						String path = uristr.substring(0, uristr.indexOf('@'));
+						context.getRdfTrans().add(databookStatement(bracket(e.getUri()), bracket(ModelUtils.LABEL_URI), ModelUtils.databookString(path)),
+								Format.N3, ModelUtils.LABEL_MODEL_URI);
+					}
+				} catch (URISyntaxException e1) {
+					e1.printStackTrace();
+				}
+			}
+		});
+		
 		registerRule(DataObject.class, new IrodsDataObjectEntityRule());
 		registerRule(DataObject.class, "replica", (Class<java.util.Collection<Replica>>)class1, new RDFCollectionPropertyRule<DataObject, Replica>(true));
 
@@ -118,7 +152,7 @@ public class DatabookRuleSet extends RuleRegistry {
         registerRule(DataEntityLink.class, "dataEntityRole", String.class, new RDFStringPropertyRule<DataEntityLink>());
 
 		registerRule(UserLink.class, new RDFEntityRule<UserLink>());
-		registerRule(UserLink.class, "user", User.class, new RDFObjectPropertyRule<UserLink, User>(false));
+		registerRule(UserLink.class, "user", User.class, new RDFObjectPropertyRule<UserLink, User>(true));
 		registerRule(UserLink.class, "userRole", String.class, new RDFStringPropertyRule<UserLink>());
 }
 
